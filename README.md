@@ -1,4 +1,4 @@
-# Website Builder 🚀
+# Website Builder
 
 A professional, high-performance drag-and-drop website builder designed for speed, precision, and ease of use. Build stunning, responsive websites in minutes with a professional "Dark Pro Studio" interface.
 

@@ -21,7 +21,7 @@ const SidebarItem = ({ type, label, icon }) => {
             className={styles['sidebar-item']}
             style={{ opacity: isDragging ? 0.5 : 1 }}
         >
-            {icon && <i className={`${icon} ${styles['item-icon']}`} style={{ marginRight: '8px', fontSize: '14px' }}></i>}
+            {icon && <i className={`${icon} ${styles['item-icon']}`}></i>}
             <span>{label}</span>
         </div>
     );

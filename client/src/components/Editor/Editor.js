@@ -95,16 +95,18 @@ const Editor = () => {
     const [future, setFuture] = useState([]);
     const [templates, setTemplates] = useState(INITIAL_TEMPLATES);
     const [showTemplates, setShowTemplates] = useState(false);
-    const [showSaveModal, setShowSaveModal] = useState(false);
-    const [tempTemplateName, setTempTemplateName] = useState('');
     const [openCategories, setOpenCategories] = useState({
         content: true,
         layout: true,
+        flexbox: false,
         typography: true,
         borders: false,
         effects: false
     });
     const [toolbarPos, setToolbarPos] = useState({ top: 0, left: 0, visible: false });
+    const [showSaveModal, setShowSaveModal] = useState(false);
+    const [tempTemplateName, setTempTemplateName] = useState('');
+    const [activeState, setActiveState] = useState('normal'); // 'normal', 'hover', 'active'
 
     const toggleCategory = (cat) => {
         setOpenCategories(prev => ({ ...prev, [cat]: !prev[cat] }));
@@ -396,11 +398,50 @@ const Editor = () => {
                     backgroundColor: '#94a3b8',
                     margin: '20px 0',
                     border: 'none',
-                    opacity: '0.4'
+                    display: 'block'
+                };
+                defaultContent = '';
+                break;
+            case 'section':
+                defaultStyle = {
+                    width: '100%',
+                    height: '300px',
+                    backgroundColor: '#f8fafc',
+                    padding: '60px 20px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    border: '1px dashed #cbd5e1',
+                    position: 'relative'
+                };
+                defaultContent = 'Full Width Section';
+                break;
+            case 'div':
+                defaultStyle = {
+                    width: '200px',
+                    height: '200px',
+                    backgroundColor: '#e2e8f0',
+                    display: 'block',
+                    borderRadius: '8px',
+                    border: '1px dashed #94a3b8',
+                    position: 'relative'
                 };
                 defaultContent = '';
                 break;
             case 'text':
+                defaultStyle = {
+                    color: '#475569',
+                    fontSize: '16px',
+                    lineHeight: '1.6',
+                    padding: '10px',
+                    margin: '10px',
+                    textAlign: 'left',
+                    fontFamily: 'Roboto, sans-serif',
+                    width: 'auto'
+                };
+                defaultContent = 'This is a text paragraph. You can edit this directly.';
+                break;
             default:
                 defaultStyle = {
                     color: '#1e293b',
@@ -423,22 +464,35 @@ const Editor = () => {
             top: `${y}px`
         };
 
+        const responsiveStyles = {
+            tablet: {},
+            mobile: {}
+        };
+        const states = {
+            hover: {},
+            active: {}
+        };
+
         setComponents((prev) => [
             ...prev,
-            { id: Date.now(), type: item.type, content: defaultContent, style: defaultStyle, link: '' },
+            {
+                id: Date.now(),
+                type: item.type,
+                content: defaultContent,
+                style: defaultStyle,
+                responsiveStyles,
+                states,
+                link: ''
+            },
         ]);
     };
 
     const addSectionToCanvas = (section) => {
         saveHistory();
         const lastComponent = components.length > 0 ? components[components.length - 1] : null;
-        let startY = 0;
 
         if (lastComponent && lastComponent.style?.top) {
             // Find the bottom of the last component roughly
-            const top = parseInt(lastComponent.style.top) || 0;
-            const height = 200; // placeholder height
-            startY = top + height + 50;
         }
 
         const newComponents = section.components.map((comp, idx) => ({
@@ -532,21 +586,34 @@ const Editor = () => {
                 */
             }
 
-            // Snap to center logic
-            const centerX = canvasRect.width / 2;
-            const centerY = canvasRect.height / 2;
+            // Grid Snapping (10px)
+            const gridSize = 10;
+            x = Math.round(x / gridSize) * gridSize;
+            y = Math.round(y / gridSize) * gridSize;
+
+            // Boundary Constraints
             const w = item.width || 0;
             const h = item.height || 0;
+
+            // Limit horizontally (0 to canvas width - item width)
+            const maxW = canvasRect.width;
+            x = Math.max(0, Math.min(x, maxW - w));
+
+            // Limit vertically (0 to reasonable bottom - let's say 10000px for now)
+            y = Math.max(0, y);
+
+            // Snap to center logic (if within threshold)
+            const centerX = canvasRect.width / 2;
             const threshold = 15;
 
-            // Only snap if we have dimensions (mostly for existing items)
             if (w > 0 && h > 0) {
                 if (Math.abs((x + w / 2) - centerX) < threshold) {
-                    x = centerX - w / 2;
+                    x = Math.round((centerX - w / 2) / gridSize) * gridSize;
                 }
-                if (Math.abs((y + h / 2) - centerY) < threshold) {
-                    y = centerY - h / 2;
-                }
+                // Optional: Snap to vertical center if needed
+                // if (Math.abs((y + h / 2) - centerY) < threshold) {
+                //     y = Math.round((centerY - h / 2) / gridSize) * gridSize;
+                // }
             }
 
             setGuides({ x: null, y: null });
@@ -560,6 +627,21 @@ const Editor = () => {
             isOver: !!monitor.isOver(),
         }),
     }), [components]);
+    const reorderComponent = (id, direction) => {
+        saveHistory();
+        setComponents((prev) => {
+            const index = prev.findIndex(c => c.id === id);
+            if (index === -1) return prev;
+            const newArray = [...prev];
+            const targetIndex = direction === 'up' ? index + 1 : index - 1;
+            if (targetIndex < 0 || targetIndex >= newArray.length) return prev;
+
+            const temp = newArray[index];
+            newArray[index] = newArray[targetIndex];
+            newArray[targetIndex] = temp;
+            return newArray;
+        });
+    };
 
     const updateComponentContent = (id, newContent) => {
         saveHistory();
@@ -580,6 +662,20 @@ const Editor = () => {
         setComponents((prev) =>
             prev.map((comp) => {
                 if (comp.id === id) {
+                    if (activeState !== 'normal') {
+                        const newStates = {
+                            ...comp.states,
+                            [activeState]: { ...(comp.states?.[activeState] || {}), [property]: value }
+                        };
+                        return { ...comp, states: newStates };
+                    }
+                    if (viewMode !== 'desktop') {
+                        const newResponsive = {
+                            ...comp.responsiveStyles,
+                            [viewMode]: { ...(comp.responsiveStyles?.[viewMode] || {}), [property]: value }
+                        };
+                        return { ...comp, responsiveStyles: newResponsive };
+                    }
                     return { ...comp, style: { ...comp.style, [property]: value } };
                 }
                 return comp;
@@ -592,12 +688,26 @@ const Editor = () => {
         setComponents((prev) =>
             prev.map((comp) => {
                 if (comp.id === id) {
+                    if (activeState !== 'normal') {
+                        const newStates = {
+                            ...comp.states,
+                            [activeState]: { ...(comp.states?.[activeState] || {}), ...styles }
+                        };
+                        return { ...comp, states: newStates };
+                    }
+                    if (viewMode !== 'desktop') {
+                        const newResponsive = {
+                            ...comp.responsiveStyles,
+                            [viewMode]: { ...(comp.responsiveStyles?.[viewMode] || {}), ...styles }
+                        };
+                        return { ...comp, responsiveStyles: newResponsive };
+                    }
                     return { ...comp, style: { ...comp.style, ...styles } };
                 }
                 return comp;
             })
         );
-    }, [saveHistory, setComponents]);
+    }, [saveHistory, setComponents, viewMode, activeState]);
 
     useEffect(() => {
         if (previewMode) return;
@@ -718,35 +828,56 @@ const Editor = () => {
         const page = pages.find(p => p.id === activePageId);
         if (!page) return;
 
-        const generateComponentHTML = (comp) => {
-            const style = { ...comp.style, position: 'absolute' };
-            const styleStr = Object.entries(style)
+        const toCss = (style) => {
+            if (!style) return '';
+            return Object.entries(style)
                 .map(([k, v]) => `${k.replace(/[A-Z]/g, m => "-" + m.toLowerCase())}:${v}`)
                 .join('; ');
+        };
 
-            switch (comp.type) {
-                case 'heading':
-                    return `<h2 style="${styleStr}">${comp.content}</h2>`;
-                case 'text':
-                    return `<p style="${styleStr}">${comp.content}</p>`;
-                case 'button':
-                    return `<button style="${styleStr}">${comp.content}</button>`;
-                case 'image':
-                    return `<img src="${comp.content}" style="${styleStr}" alt="User content" />`;
-                case 'video':
-                    return `<div style="${styleStr}"><video src="${comp.content}" style="width:100%;height:100%" controls></video></div>`;
-                case 'divider':
-                    return `<hr style="${styleStr}" />`;
-                case 'input':
-                    return `<input type="text" placeholder="${comp.content}" style="${styleStr}" />`;
-                default:
-                    return `<div style="${styleStr}">${comp.content}</div>`;
+        let stylesBlock = '';
+        let tabletStylesBlock = '';
+        let mobileStylesBlock = '';
+
+        const generateComponentHTML = (comp, idx) => {
+            const id = `el-${idx}`;
+
+            // Base styles
+            stylesBlock += `#${id} { ${toCss({ ...comp.style, position: 'absolute' })} }\n`;
+
+            // States
+            if (comp.states?.hover) stylesBlock += `#${id}:hover { ${toCss(comp.states.hover)} }\n`;
+            if (comp.states?.active) stylesBlock += `#${id}:active { ${toCss(comp.states.active)} }\n`;
+
+            // Responsive
+            if (comp.responsiveStyles?.tablet) tabletStylesBlock += `#${id} { ${toCss(comp.responsiveStyles.tablet)} }\n`;
+            if (comp.responsiveStyles?.mobile) mobileStylesBlock += `#${id} { ${toCss(comp.responsiveStyles.mobile)} }\n`;
+
+            const content = comp.content || '';
+            const tag = comp.type === 'heading' ? 'h2' : (comp.type === 'text' ? 'p' : (comp.type === 'button' ? 'button' : 'div'));
+
+            let elementHTML = '';
+            if (comp.type === 'image') {
+                elementHTML = `<img id="${id}" src="${content}" alt="User content" />`;
+            } else if (comp.type === 'video') {
+                elementHTML = `<div id="${id}"><iframe src="${content.replace('watch?v=', 'embed/')}" style="width:100%;height:100%" frameborder="0" allowfullscreen></iframe></div>`;
+            } else if (comp.type === 'divider') {
+                elementHTML = `<hr id="${id}" />`;
+            } else if (comp.type === 'input') {
+                elementHTML = `<input id="${id}" type="text" placeholder="${content}" />`;
+            } else {
+                elementHTML = `<${tag} id="${id}">${content}</${tag}>`;
             }
+
+            if (comp.link) {
+                return `<a href="${comp.link}" style="text-decoration:none">${elementHTML}</a>`;
+            }
+            return elementHTML;
         };
 
         const pageStyle = page.style || {};
         const bgStyleStr = Object.entries(pageStyle)
-            .filter(([k]) => ['backgroundImage', 'backgroundSize', 'backgroundPosition', 'backgroundRepeat'].includes(k))
+            .filter(([k]) => ['backgroundImage', 'backgroundSize', 'backgroundPosition', 'backgroundRepeat', 'background'].includes(k))
             .map(([k, v]) => {
                 if (k === 'backgroundImage' && v) return `background-image: url('${v}')`;
                 return `${k.replace(/[A-Z]/g, m => "-" + m.toLowerCase())}:${v}`;
@@ -762,16 +893,29 @@ const Editor = () => {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${page.name}</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Open+Sans:wght@400;700&family=Montserrat:wght@400;700&family=Playfair+Display:wght@700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        body { margin: 0; padding: 0; font-family: 'Roboto', sans-serif; }
+        body { margin: 0; padding: 0; font-family: 'Roboto', sans-serif; overflow-x: hidden; }
         .canvas { 
             position: relative; 
             width: 100%; 
             min-height: 100vh; 
-            overflow-x: hidden; 
             ${bgStyleStr} 
         }
         * { box-sizing: border-box; }
+        
+        /* Base Component Styles */
+        ${stylesBlock}
+        
+        /* Tablet Breakpoint (768px) */
+        @media (max-width: 768px) {
+            ${tabletStylesBlock}
+        }
+        
+        /* Mobile Breakpoint (480px) */
+        @media (max-width: 480px) {
+            ${mobileStylesBlock}
+        }
     </style>
 </head>
 <body>
@@ -872,23 +1016,6 @@ const Editor = () => {
         updateComponentStyles(selectedId, newStyles);
     };
 
-    const handleImageUpload = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const formData = new FormData();
-        formData.append('image', file);
-
-        try {
-            const res = await axios.post('http://localhost:5000/api/upload', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
-            updateComponentContent(selectedId, res.data.filePath);
-        } catch (err) {
-            console.error('Error uploading image:', err);
-            alert('Failed to upload image');
-        }
-    };
 
     const handlePageBackgroundUpload = async (e) => {
         const file = e.target.files[0];
@@ -916,16 +1043,12 @@ const Editor = () => {
     }, [drop]);
 
     const pageContentStyle = {
-        minHeight: '800px',
         position: 'relative',
-        backgroundColor: isOver ? '#f0f9ff' : '#fff',
-        boxShadow: '0 0 10px rgba(0,0,0,0.1)',
-        padding: '20px',
-        border: isOver ? '2px dashed #3498db' : (previewMode ? 'none' : '2px dashed #ccc'),
         backgroundImage: backgroundImage ? `url("${backgroundImage}")` : 'none',
         backgroundSize: backgroundSize,
         backgroundPosition: backgroundPosition,
         backgroundRepeat: backgroundRepeat,
+        background: activePage?.style?.background || '#fff'
     };
 
     return (
@@ -937,6 +1060,9 @@ const Editor = () => {
                         <>
                             <button onClick={handleSaveAsTemplate} className={`${styles.btn} ${styles['btn-success']}`}>Save as Template</button>
                             <button onClick={() => setShowTemplates(true)} className={`${styles.btn} ${styles['btn-primary']}`}>Templates</button>
+                            <a href="/templates/perfume-store" target="_blank" rel="noopener noreferrer" className={`${styles.btn} ${styles['btn-secondary']}`} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+                                <i className="fas fa-external-link-alt" style={{ marginRight: '5px' }}></i> Perfume Demo
+                            </a>
                             <button onClick={undo} disabled={history.length === 0} className={`${styles.btn} ${styles['btn-warning']}`}>Undo</button>
                             <button onClick={redo} disabled={future.length === 0} className={`${styles.btn} ${styles['btn-warning']}`}>Redo</button>
                             <button onClick={handleExportHTML} className={`${styles.btn} ${styles['btn-primary']}`}>Export HTML</button>
@@ -944,13 +1070,11 @@ const Editor = () => {
                             <button onClick={clearCanvas} className={`${styles.btn} ${styles['btn-danger']}`}>Clear All</button>
                         </>
                     )}
-                    {previewMode && (
-                        <div className={styles['button-group']}>
-                            <button onClick={() => setViewMode('desktop')} className={viewMode === 'desktop' ? styles.active : ''}>Desktop</button>
-                            <button onClick={() => setViewMode('tablet')} className={viewMode === 'tablet' ? styles.active : ''}>Tablet</button>
-                            <button onClick={() => setViewMode('mobile')} className={viewMode === 'mobile' ? styles.active : ''}>Mobile</button>
-                        </div>
-                    )}
+                    <div className={styles['view-mode-toggle']} style={{ marginLeft: '10px' }}>
+                        <button onClick={() => setViewMode('desktop')} className={viewMode === 'desktop' ? styles.active : ''} title="Desktop View"><i className="fas fa-desktop"></i></button>
+                        <button onClick={() => setViewMode('tablet')} className={viewMode === 'tablet' ? styles.active : ''} title="Tablet View"><i className="fas fa-tablet-alt"></i></button>
+                        <button onClick={() => setViewMode('mobile')} className={viewMode === 'mobile' ? styles.active : ''} title="Mobile View"><i className="fas fa-mobile-alt"></i></button>
+                    </div>
                 </div>
                 <button
                     onClick={() => setPreviewMode(!previewMode)}
@@ -966,7 +1090,9 @@ const Editor = () => {
                     <div className={styles.sidebar}>
                         <h3>Tools</h3>
                         <div className={styles['sidebar-tools-grid']}>
-                            <SidebarItem type="text" label="Text" icon="fas fa-font" />
+                            <SidebarItem type="section" label="Section" icon="fas fa-layer-group" />
+                            <SidebarItem type="div" label="Div Block" icon="fas fa-box" />
+                            <SidebarItem type="text" label="Text" icon="fas fa-paragraph" />
                             <SidebarItem type="heading" label="Heading" icon="fas fa-heading" />
                             <SidebarItem type="image" label="Image" icon="fas fa-image" />
                             <SidebarItem type="video" label="Video" icon="fas fa-video" />
@@ -975,8 +1101,8 @@ const Editor = () => {
                             <SidebarItem type="divider" label="Divider" icon="fas fa-minus" />
                         </div>
 
-                        <div style={{ marginTop: '20px', borderTop: '1px solid #34495e', paddingTop: '20px' }}>
-                            <h3 style={{ marginBottom: '10px' }}>Sections</h3>
+                        <div style={{ marginTop: '24px', borderTop: '1px solid var(--border-color)', paddingTop: '20px' }}>
+                            <h3>Sections</h3>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '8px' }}>
                                 {PREBUILT_SECTIONS.map(section => (
                                     <div
@@ -992,8 +1118,8 @@ const Editor = () => {
                             </div>
                         </div>
 
-                        <div style={{ marginTop: '20px', borderTop: '1px solid #34495e', paddingTop: '20px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                        <div style={{ marginTop: '24px', borderTop: '1px solid var(--border-color)', paddingTop: '20px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                                 <h3 style={{ margin: 0 }}>Pages</h3>
                                 <button onClick={addPage} className={`${styles.btn} ${styles['btn-success']} ${styles['btn-sm']}`}>+ Add</button>
                             </div>
@@ -1019,8 +1145,8 @@ const Editor = () => {
                             </div>
                         </div>
 
-                        <div style={{ marginTop: '20px', borderTop: '1px solid #334155', paddingTop: '20px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                        <div style={{ marginTop: '24px', borderTop: '1px solid var(--border-color)', paddingTop: '20px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                                 <h3 style={{ margin: 0 }}>Navigator</h3>
                             </div>
                             <div className={styles['pages-list']}>
@@ -1040,13 +1166,17 @@ const Editor = () => {
                                                         comp.type === 'video' ? 'fas fa-video' :
                                                             comp.type === 'button' ? 'fas fa-square' :
                                                                 comp.type === 'input' ? 'fas fa-i-cursor' :
-                                                                    comp.type === 'divider' ? 'fas fa-minus' : 'fas fa-font'
-                                            } style={{ marginRight: '8px', width: '15px' }}></i>
-                                            <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                                    comp.type === 'section' ? 'fas fa-layer-group' :
+                                                                        comp.type === 'div' ? 'fas fa-box' :
+                                                                            comp.type === 'divider' ? 'fas fa-minus' : 'fas fa-font'
+                                            } style={{ marginRight: '8px', width: '15px', color: 'var(--primary-color)', opacity: 0.8 }}></i>
+                                            <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>
                                                 {comp.content || comp.type}
                                             </span>
-                                            <div style={{ marginLeft: 'auto', display: 'flex', gap: '5px' }}>
-                                                <i className="fas fa-trash" onClick={(e) => { e.stopPropagation(); deleteComponent(comp.id); }} style={{ fontSize: '10px', cursor: 'pointer', opacity: 0.5 }}></i>
+                                            <div style={{ display: 'flex', gap: '4px', opacity: selectedId === comp.id ? 1 : 0.4 }}>
+                                                <i className="fas fa-chevron-up" onClick={(e) => { e.stopPropagation(); reorderComponent(comp.id, 'up'); }} style={{ fontSize: '10px', cursor: 'pointer' }} title="Bring Forward"></i>
+                                                <i className="fas fa-chevron-down" onClick={(e) => { e.stopPropagation(); reorderComponent(comp.id, 'down'); }} style={{ fontSize: '10px', cursor: 'pointer' }} title="Send Backward"></i>
+                                                <i className="fas fa-trash" onClick={(e) => { e.stopPropagation(); deleteComponent(comp.id); }} style={{ fontSize: '10px', cursor: 'pointer', color: '#ef4444' }}></i>
                                             </div>
                                         </div>
                                     ))
@@ -1095,11 +1225,15 @@ const Editor = () => {
                                 content={comp.content}
                                 link={comp.link}
                                 style={comp.style}
+                                responsiveStyles={comp.responsiveStyles}
+                                states={comp.states}
                                 selected={selectedId === comp.id}
                                 updateComponentStyles={updateComponentStyles}
+                                updateComponentContent={updateComponentContent}
                                 onSelect={!previewMode ? setSelectedId : () => { }}
                                 onDragStart={saveHistory}
                                 previewMode={previewMode}
+                                viewMode={viewMode}
                             />
                         ))}
                     </div>
@@ -1118,6 +1252,19 @@ const Editor = () => {
                                         <input type="text" value={selectedComponent.content} onChange={(e) => updateComponentContent(selectedComponent.id, e.target.value)} style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }} />
                                     </div>
                                 )}
+                                <div className={styles['form-group']} style={{ marginBottom: '24px' }}>
+                                    <label className={styles['form-label']}>EDITING STATE</label>
+                                    <div className={styles['view-mode-toggle']}>
+                                        <button onClick={() => setActiveState('normal')} className={activeState === 'normal' ? styles.active : ''}>Normal</button>
+                                        <button onClick={() => setActiveState('hover')} className={activeState === 'hover' ? styles.active : ''}>Hover</button>
+                                        <button onClick={() => setActiveState('active')} className={activeState === 'active' ? styles.active : ''}>Active</button>
+                                    </div>
+                                    {activeState !== 'normal' && (
+                                        <div style={{ fontSize: '0.75rem', color: '#818cf8', marginTop: '8px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                            <i className="fas fa-info-circle"></i> Mode: {activeState.toUpperCase()}
+                                        </div>
+                                    )}
+                                </div>
                                 <h3>Inspector</h3>
 
                                 <div className={styles['prop-category']}>
@@ -1187,6 +1334,25 @@ const Editor = () => {
                                                     </select>
                                                 </div>
                                             </div>
+                                            <div className={styles.flex} style={{ gap: '10px' }}>
+                                                <div className={styles['form-group']} style={{ flex: 1 }}>
+                                                    <label className={styles['form-label']}>Line H</label>
+                                                    <input type="number" step="0.1" value={parseFloat(selectedComponent.style?.lineHeight) || 1.5} onChange={(e) => updateComponentStyle(selectedComponent.id, 'lineHeight', e.target.value)} className={styles['form-control']} />
+                                                </div>
+                                                <div className={styles['form-group']} style={{ flex: 1 }}>
+                                                    <label className={styles['form-label']}>Spacing</label>
+                                                    <input type="number" step="1" value={parseInt(selectedComponent.style?.letterSpacing) || 0} onChange={(e) => updateComponentStyle(selectedComponent.id, 'letterSpacing', `${e.target.value}px`)} className={styles['form-control']} />
+                                                </div>
+                                            </div>
+                                            <div className={styles['form-group']}>
+                                                <label className={styles['form-label']}>Transform</label>
+                                                <div className={styles['button-group']}>
+                                                    <button onClick={() => updateComponentStyle(selectedComponent.id, 'textTransform', 'none')} className={selectedComponent.style?.textTransform === 'none' || !selectedComponent.style?.textTransform ? styles.active : ''}>None</button>
+                                                    <button onClick={() => updateComponentStyle(selectedComponent.id, 'textTransform', 'uppercase')} className={selectedComponent.style?.textTransform === 'uppercase' ? styles.active : ''}>ABC</button>
+                                                    <button onClick={() => updateComponentStyle(selectedComponent.id, 'textTransform', 'capitalize')} className={selectedComponent.style?.textTransform === 'capitalize' ? styles.active : ''}>Abc</button>
+                                                    <button onClick={() => updateComponentStyle(selectedComponent.id, 'textTransform', 'lowercase')} className={selectedComponent.style?.textTransform === 'lowercase' ? styles.active : ''}>abc</button>
+                                                </div>
+                                            </div>
                                             <div className={styles['form-group']}>
                                                 <label className={styles['form-label']}>Text Color</label>
                                                 <input type="color" value={selectedComponent.style?.color || '#000000'} onChange={(e) => updateComponentStyle(selectedComponent.id, 'color', e.target.value)} className={styles['form-control']} style={{ height: '40px' }} />
@@ -1201,20 +1367,137 @@ const Editor = () => {
                                 </div>
 
                                 <div className={styles['prop-category']}>
+                                    <div className={`${styles['prop-header']} ${openCategories.size ? styles.open : ''}`} onClick={() => toggleCategory('size')}>
+                                        <span><i className="fas fa-expand-arrows-alt"></i> SIZE & DIMENSIONS</span>
+                                        <i className="fas fa-chevron-down"></i>
+                                    </div>
+                                    {openCategories.size && (
+                                        <div className={styles['prop-content']}>
+                                            <div className={styles.flex} style={{ gap: '10px' }}>
+                                                <div className={styles['form-group']} style={{ flex: 1 }}>
+                                                    <label className={styles['form-label']}>Width</label>
+                                                    <div style={{ display: 'flex', gap: '4px' }}>
+                                                        <input
+                                                            type="text"
+                                                            value={selectedComponent.style?.width || 'auto'}
+                                                            onChange={(e) => updateComponentStyle(selectedComponent.id, 'width', e.target.value)}
+                                                            className={styles['form-control']}
+                                                            style={{ flex: 2 }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <div className={styles['form-group']} style={{ flex: 1 }}>
+                                                    <label className={styles['form-label']}>Height</label>
+                                                    <div style={{ display: 'flex', gap: '4px' }}>
+                                                        <input
+                                                            type="text"
+                                                            value={selectedComponent.style?.height || 'auto'}
+                                                            onChange={(e) => updateComponentStyle(selectedComponent.id, 'height', e.target.value)}
+                                                            className={styles['form-control']}
+                                                            style={{ flex: 2 }}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className={styles.flex} style={{ gap: '10px' }}>
+                                                <div className={styles['form-group']} style={{ flex: 1 }}>
+                                                    <label className={styles['form-label']}>Min W</label>
+                                                    <input type="text" placeholder="auto" value={selectedComponent.style?.minWidth || ''} onChange={(e) => updateComponentStyle(selectedComponent.id, 'minWidth', e.target.value)} className={styles['form-control']} />
+                                                </div>
+                                                <div className={styles['form-group']} style={{ flex: 1 }}>
+                                                    <label className={styles['form-label']}>Max W</label>
+                                                    <input type="text" placeholder="none" value={selectedComponent.style?.maxWidth || ''} onChange={(e) => updateComponentStyle(selectedComponent.id, 'maxWidth', e.target.value)} className={styles['form-control']} />
+                                                </div>
+                                            </div>
+                                            <div className={styles['form-group']}>
+                                                <label className={styles['form-label']}>Overflow</label>
+                                                <select value={selectedComponent.style?.overflow || 'visible'} onChange={(e) => updateComponentStyle(selectedComponent.id, 'overflow', e.target.value)} className={styles['form-control']}>
+                                                    <option value="visible">Visible</option>
+                                                    <option value="hidden">Hidden</option>
+                                                    <option value="scroll">Scroll</option>
+                                                    <option value="auto">Auto</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className={styles['prop-category']}>
                                     <div className={`${styles['prop-header']} ${openCategories.layout ? styles.open : ''}`} onClick={() => toggleCategory('layout')}>
-                                        <span><i className="fas fa-th-large"></i> LAYOUT</span>
+                                        <span><i className="fas fa-th-large"></i> LAYOUT & SPACING</span>
                                         <i className="fas fa-chevron-down"></i>
                                     </div>
                                     {openCategories.layout && (
                                         <div className={styles['prop-content']}>
-                                            <div className={styles.flex} style={{ gap: '10px' }}>
-                                                <div className={styles['form-group']} style={{ flex: 1 }}>
-                                                    <label className={styles['form-label']}>Padding</label>
-                                                    <input type="number" value={parseInt(selectedComponent.style?.padding) || 0} onChange={(e) => updateComponentStyle(selectedComponent.id, 'padding', `${e.target.value}px`)} className={styles['form-control']} />
-                                                </div>
-                                                <div className={styles['form-group']} style={{ flex: 1 }}>
-                                                    <label className={styles['form-label']}>Margin</label>
-                                                    <input type="number" value={parseInt(selectedComponent.style?.margin) || 0} onChange={(e) => updateComponentStyle(selectedComponent.id, 'margin', `${e.target.value}px`)} className={styles['form-control']} />
+                                            <div className={styles['spacing-visualizer']}>
+                                                <div className={styles['spacing-container']}>
+                                                    <span className={styles['spacing-label']} style={{ top: '6px' }}>Margin</span>
+                                                    <input
+                                                        type="number"
+                                                        className={`${styles['spacing-input-mini']} ${styles.margin}`}
+                                                        style={{ top: '4px', left: '50%', transform: 'translateX(-50%)' }}
+                                                        value={parseInt(selectedComponent.style?.marginTop) || 0}
+                                                        onChange={(e) => updateComponentStyle(selectedComponent.id, 'marginTop', `${e.target.value}px`)}
+                                                        title="Margin Top"
+                                                    />
+                                                    <input
+                                                        type="number"
+                                                        className={`${styles['spacing-input-mini']} ${styles.margin}`}
+                                                        style={{ bottom: '4px', left: '50%', transform: 'translateX(-50%)' }}
+                                                        value={parseInt(selectedComponent.style?.marginBottom) || 0}
+                                                        onChange={(e) => updateComponentStyle(selectedComponent.id, 'marginBottom', `${e.target.value}px`)}
+                                                        title="Margin Bottom"
+                                                    />
+                                                    <input
+                                                        type="number"
+                                                        className={`${styles['spacing-input-mini']} ${styles.margin}`}
+                                                        style={{ left: '4px', top: '50%', transform: 'translateY(-50%)' }}
+                                                        value={parseInt(selectedComponent.style?.marginLeft) || 0}
+                                                        onChange={(e) => updateComponentStyle(selectedComponent.id, 'marginLeft', `${e.target.value}px`)}
+                                                        title="Margin Left"
+                                                    />
+                                                    <input
+                                                        type="number"
+                                                        className={`${styles['spacing-input-mini']} ${styles.margin}`}
+                                                        style={{ right: '4px', top: '50%', transform: 'translateY(-50%)' }}
+                                                        value={parseInt(selectedComponent.style?.marginRight) || 0}
+                                                        onChange={(e) => updateComponentStyle(selectedComponent.id, 'marginRight', `${e.target.value}px`)}
+                                                        title="Margin Right"
+                                                    />
+
+                                                    <div className={styles['spacing-inner-box']}>
+                                                        <span className={styles['spacing-label']} style={{ top: '2px', fontSize: '8px' }}>Padding</span>
+                                                        <input
+                                                            type="number"
+                                                            className={`${styles['spacing-input-mini']} ${styles.padding}`}
+                                                            style={{ top: '2px', left: '50%', transform: 'translateX(-50%) scale(0.8)' }}
+                                                            value={parseInt(selectedComponent.style?.paddingTop) || 0}
+                                                            onChange={(e) => updateComponentStyle(selectedComponent.id, 'paddingTop', `${e.target.value}px`)}
+                                                        />
+                                                        <input
+                                                            type="number"
+                                                            className={`${styles['spacing-input-mini']} ${styles.padding}`}
+                                                            style={{ bottom: '2px', left: '50%', transform: 'translateX(-50%) scale(0.8)' }}
+                                                            value={parseInt(selectedComponent.style?.paddingBottom) || 0}
+                                                            onChange={(e) => updateComponentStyle(selectedComponent.id, 'paddingBottom', `${e.target.value}px`)}
+                                                        />
+                                                        <input
+                                                            type="number"
+                                                            className={`${styles['spacing-input-mini']} ${styles.padding}`}
+                                                            style={{ left: '2px', top: '50%', transform: 'translateY(-50%) scale(0.8)' }}
+                                                            value={parseInt(selectedComponent.style?.paddingLeft) || 0}
+                                                            onChange={(e) => updateComponentStyle(selectedComponent.id, 'paddingLeft', `${e.target.value}px`)}
+                                                        />
+                                                        <input
+                                                            type="number"
+                                                            className={`${styles['spacing-input-mini']} ${styles.padding}`}
+                                                            style={{ right: '2px', top: '50%', transform: 'translateY(-50%) scale(0.8)' }}
+                                                            value={parseInt(selectedComponent.style?.paddingRight) || 0}
+                                                            onChange={(e) => updateComponentStyle(selectedComponent.id, 'paddingRight', `${e.target.value}px`)}
+                                                        />
+                                                        <div className={styles['spacing-center-icon']}>
+                                                            <i className="fas fa-expand"></i>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                             <label className={styles['form-label']}>Quick Align</label>
@@ -1228,6 +1511,58 @@ const Editor = () => {
                                                 <button onClick={() => alignComponent('middle')} className={`${styles.btn} ${styles['btn-secondary']} ${styles['btn-sm']}`} style={{ flex: 1 }} title="Middle"><i className="fas fa-arrows-alt-v"></i></button>
                                                 <button onClick={() => alignComponent('bottom')} className={`${styles.btn} ${styles['btn-secondary']} ${styles['btn-sm']}`} style={{ flex: 1 }} title="Bottom"><i className="fas fa-arrow-down"></i></button>
                                             </div>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className={styles['prop-category']}>
+                                    <div className={`${styles['prop-header']} ${openCategories.flexbox ? styles.open : ''}`} onClick={() => toggleCategory('flexbox')}>
+                                        <span><i className="fas fa-layer-group"></i> FLEXBOX</span>
+                                        <i className="fas fa-chevron-down"></i>
+                                    </div>
+                                    {openCategories.flexbox && (
+                                        <div className={styles['prop-content']}>
+                                            <div className={styles['form-group']}>
+                                                <label className={styles['form-label']}>Display</label>
+                                                <select value={selectedComponent.style?.display || 'block'} onChange={(e) => updateComponentStyle(selectedComponent.id, 'display', e.target.value)} className={styles['form-control']}>
+                                                    <option value="block">Block</option>
+                                                    <option value="flex">Flex</option>
+                                                    <option value="inline-block">Inline Block</option>
+                                                </select>
+                                            </div>
+                                            {selectedComponent.style?.display === 'flex' && (
+                                                <>
+                                                    <div className={styles['form-group']}>
+                                                        <label className={styles['form-label']}>Direction</label>
+                                                        <select value={selectedComponent.style?.flexDirection || 'row'} onChange={(e) => updateComponentStyle(selectedComponent.id, 'flexDirection', e.target.value)} className={styles['form-control']}>
+                                                            <option value="row">Row</option>
+                                                            <option value="column">Column</option>
+                                                        </select>
+                                                    </div>
+                                                    <div className={styles['form-group']}>
+                                                        <label className={styles['form-label']}>Align Items</label>
+                                                        <select value={selectedComponent.style?.alignItems || 'stretch'} onChange={(e) => updateComponentStyle(selectedComponent.id, 'alignItems', e.target.value)} className={styles['form-control']}>
+                                                            <option value="flex-start">Start</option>
+                                                            <option value="center">Center</option>
+                                                            <option value="flex-end">End</option>
+                                                            <option value="stretch">Stretch</option>
+                                                        </select>
+                                                    </div>
+                                                    <div className={styles['form-group']}>
+                                                        <label className={styles['form-label']}>Justify Content</label>
+                                                        <select value={selectedComponent.style?.justifyContent || 'flex-start'} onChange={(e) => updateComponentStyle(selectedComponent.id, 'justifyContent', e.target.value)} className={styles['form-control']}>
+                                                            <option value="flex-start">Start</option>
+                                                            <option value="center">Center</option>
+                                                            <option value="flex-end">End</option>
+                                                            <option value="space-between">Between</option>
+                                                            <option value="space-around">Around</option>
+                                                        </select>
+                                                    </div>
+                                                    <div className={styles['form-group']}>
+                                                        <label className={styles['form-label']}>Gap (px)</label>
+                                                        <input type="number" value={parseInt(selectedComponent.style?.gap) || 0} onChange={(e) => updateComponentStyle(selectedComponent.id, 'gap', `${e.target.value}px`)} className={styles['form-control']} />
+                                                    </div>
+                                                </>
+                                            )}
                                         </div>
                                     )}
                                 </div>
@@ -1284,6 +1619,7 @@ const Editor = () => {
                                                     <option value="0px 2px 5px rgba(0,0,0,0.1)">Soft</option>
                                                     <option value="0px 4px 10px rgba(0,0,0,0.15)">Medium</option>
                                                     <option value="0px 10px 20px rgba(0,0,0,0.2)">Strong</option>
+                                                    <option value="0px 20px 40px rgba(0,0,0,0.3)">Extra Strong</option>
                                                     <option value="inset 0px 4px 10px rgba(0,0,0,0.1)">Inset Shadow</option>
                                                 </select>
                                             </div>
@@ -1294,6 +1630,10 @@ const Editor = () => {
                                             <div className={styles['form-group']}>
                                                 <label className={styles['form-label']}>Z-Index</label>
                                                 <input type="number" value={selectedComponent.style?.zIndex || 0} onChange={(e) => updateComponentStyle(selectedComponent.id, 'zIndex', parseInt(e.target.value))} className={styles['form-control']} />
+                                            </div>
+                                            <div className={styles['form-group']}>
+                                                <label className={styles['form-label']}>Filter (Blur)</label>
+                                                <input type="range" min="0" max="20" step="1" value={parseInt(selectedComponent.style?.filter?.replace('blur(', '').replace('px)', '')) || 0} onChange={(e) => updateComponentStyle(selectedComponent.id, 'filter', `blur(${e.target.value}px)`)} className={styles['w-100']} />
                                             </div>
                                         </div>
                                     )}
@@ -1324,6 +1664,20 @@ const Editor = () => {
                                 {backgroundImage && (
                                     <>
                                         <button onClick={() => setBackgroundImage('')} className={`${styles.btn} ${styles['btn-danger']} ${styles['w-100']} ${styles['mt-10']} ${styles['mb-15']}`}>Remove Background</button>
+
+                                        <label className={`${styles['d-block']} ${styles['mb-5']} ${styles['fw-bold']}`}>Background Gradient</label>
+                                        <select
+                                            value={activePage.style.background || 'none'}
+                                            onChange={(e) => updatePageStyle('background', e.target.value)}
+                                            className={`${styles['form-control']} ${styles['mb-15']}`}
+                                        >
+                                            <option value="none">None</option>
+                                            <option value="linear-gradient(135deg, #667eea 0%, #764ba2 100%)">Royal Purple</option>
+                                            <option value="linear-gradient(135deg, #f093fb 0%, #f5576c 100%)">Soft Pink</option>
+                                            <option value="linear-gradient(135deg, #2af598 0%, #009efd 100%)">Ocean Blue</option>
+                                            <option value="linear-gradient(135deg, #0a0a0a 0%, #2e2e2e 100%)">Dark Studio</option>
+                                            <option value="linear-gradient(135deg, #d4af37 0%, #aa8b2c 100%)">Gold Luxury</option>
+                                        </select>
 
                                         <label className={`${styles['d-block']} ${styles['mb-5']} ${styles['fw-bold']}`}>Background Size</label>
                                         <select

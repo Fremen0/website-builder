@@ -1,0 +1,169 @@
+.product-page {
+    padding-top: 100px;
+    background-color: var(--bg-primary);
+    min-height: 100vh;
+}
+
+.product-container {
+    display: flex;
+    gap: 5rem;
+    padding: 4rem 10%;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.product-media {
+    flex: 1.2;
+    border-radius: 12px;
+    overflow: hidden;
+    max-height: 700px;
+}
+
+.main-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 1s ease;
+}
+
+.main-image:hover {
+    transform: scale(1.05);
+}
+
+.product-details {
+    flex: 0.8;
+    display: flex;
+    flex-direction: column;
+}
+
+.brand-label {
+    font-size: 0.8rem;
+    letter-spacing: 0.3em;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.product-title {
+    font-size: 3.5rem;
+    margin-bottom: 1rem;
+}
+
+.product-price {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+}
+
+.product-description {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    font-style: italic;
+    margin-bottom: 2.5rem;
+    line-height: 1.8;
+}
+
+.scent-notes-box {
+    background: rgba(212, 175, 55, 0.05);
+    padding: 1.5rem;
+    border-left: 2px solid var(--gold-primary);
+    margin-bottom: 2.5rem;
+}
+
+.scent-notes-box h4 {
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+.scent-notes-box ul {
+    list-style: none;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+}
+
+.size-selection {
+    margin-bottom: 3rem;
+}
+
+.size-selection h4 {
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    color: var(--text-secondary);
+}
+
+.size-options {
+    display: flex;
+    gap: 1rem;
+}
+
+.size-btn {
+    background: transparent;
+    border: var(--border-premium);
+    color: var(--text-primary);
+    padding: 0.8rem 2rem;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    font-family: 'Cinzel', serif;
+}
+
+.size-btn:hover,
+.size-btn.active {
+    border-color: var(--gold-primary);
+    color: var(--gold-primary);
+    background: rgba(212, 175, 55, 0.1);
+}
+
+.product-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.add-to-cart {
+    padding: 1.2rem;
+    font-size: 1rem;
+}
+
+.add-to-cart.success {
+    background: #10b981;
+    color: #fff;
+}
+
+.wishlist-btn {
+    border-width: 1px;
+    background: transparent;
+}
+
+.recommendations {
+    padding: 6rem 10%;
+    border-top: var(--border-premium);
+    background: var(--bg-secondary);
+    text-align: center;
+}
+
+.recommendations h2 {
+    font-size: 2rem;
+    margin-bottom: 4rem;
+}
+
+.recommendations-grid {
+    display: flex;
+    justify-content: center;
+    gap: 4rem;
+}
+
+.mini {
+    width: 250px;
+}
+
+.small {
+    height: 300px;
+}
+
+@media (max-width: 1024px) {
+    .product-container {
+        flex-direction: column;
+    }
+}

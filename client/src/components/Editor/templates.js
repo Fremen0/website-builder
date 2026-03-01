@@ -42,6 +42,17 @@ export const INITIAL_TEMPLATES = [
             { id: 23, type: 'input', content: 'Your Email', style: { width: '80%', display: 'block', margin: '0 auto 15px auto', padding: '12px', border: '1px solid #e2e8f0', borderRadius: '8px' } },
             { id: 24, type: 'button', content: 'Send Message', style: { width: '80%', display: 'block', margin: '20px auto', backgroundColor: '#6366f1', color: '#fff', padding: '15px', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' } }
         ]
+    },
+    {
+        id: 'luxury-perfume-store',
+        name: 'Luxury Perfume Store',
+        components: [
+            { id: 100, type: 'heading', content: 'Explore the Essence of Royalty', style: { fontSize: '1.2rem', fontWeight: '500', color: '#d4af37', textAlign: 'center', letterSpacing: '0.3em', textTransform: 'uppercase', marginBottom: '1.5rem', display: 'block', backgroundColor: '#0a0a0a', padding: '100px 20px 20px 20px' } },
+            { id: 101, type: 'heading', content: 'OUD ROYAL', style: { fontSize: '5rem', fontWeight: '800', textAlign: 'center', backgroundColor: '#0a0a0a', padding: '0 20px 40px 20px', color: '#ffffff', letterSpacing: '0.1em', fontFamily: 'serif' } },
+            { id: 102, type: 'text', content: 'Experience the rarest oud, handpicked from ancient gardens. A scent that transcends time and defines true luxury.', style: { fontSize: '1.4rem', fontStyle: 'italic', textAlign: 'center', color: '#a0a0a0', backgroundColor: '#0a0a0a', padding: '0 100px 60px 100px', lineHeight: '1.8', fontFamily: 'serif' } },
+            { id: 103, type: 'button', content: 'Explore Collection', style: { backgroundColor: '#d4af37', color: '#000', padding: '15px 40px', border: 'none', borderRadius: '0', display: 'block', margin: '0 auto 100px auto', cursor: 'pointer', fontSize: '1.1rem', fontWeight: '700', textTransform: 'uppercase', fontFamily: 'serif' } },
+            { id: 104, type: 'image', content: 'https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&q=80&w=1000', style: { width: '80%', height: 'auto', display: 'block', margin: '0 auto', boxShadow: '0 30px 60px rgba(0,0,0,0.8)' } }
+        ]
     }
 ];
 
@@ -72,6 +83,26 @@ export const PREBUILT_SECTIONS = [
         components: [
             { type: 'divider', content: '', style: { width: '100%', height: '1px', backgroundColor: '#e2e8f0', margin: '40px 0' } },
             { type: 'text', content: '© 2024 Website Builder. All rights reserved.', style: { textAlign: 'center', padding: '20px', color: '#94a3b8', fontSize: '14px' } }
+        ]
+    },
+    {
+        id: 'section-pricing',
+        name: 'Pricing Table',
+        icon: 'fas fa-tags',
+        components: [
+            { type: 'heading', content: 'Simple Pricing', style: { fontSize: '32px', fontWeight: '800', textAlign: 'center', padding: '60px 0 10px 0' } },
+            { type: 'text', content: 'Choose the plan that fits your needs.', style: { fontSize: '18px', textAlign: 'center', color: '#64748b', marginBottom: '40px' } },
+            { type: 'button', content: 'Pro Plan - $29/mo', style: { backgroundColor: '#6366f1', color: '#fff', padding: '20px 60px', borderRadius: '12px', fontSize: '20px', fontWeight: 'bold', display: 'block', margin: '0 auto', cursor: 'pointer', border: 'none' } }
+        ]
+    },
+    {
+        id: 'section-testimonials',
+        name: 'Testimonials',
+        icon: 'fas fa-quote-left',
+        components: [
+            { type: 'heading', content: 'What Our Clients Say', style: { fontSize: '32px', fontWeight: 'bold', textAlign: 'center', padding: '60px 0 30px 0' } },
+            { type: 'text', content: '"This builder changed my life. I launched my startup in 2 days!"', style: { fontSize: '20px', fontStyle: 'italic', textAlign: 'center', color: '#1e293b', padding: '20px 100px', lineHeight: '1.6' } },
+            { type: 'text', content: '- Sarah Jenkins, CEO', style: { fontSize: '16px', fontWeight: '700', textAlign: 'center', color: '#6366f1' } }
         ]
     }
 ];
