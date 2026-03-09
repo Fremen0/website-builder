@@ -5,11 +5,11 @@ import axios from 'axios';
 import SidebarItem from './SidebarItem';
 import CanvasItem from './CanvasItem';
 import styles from './Editor.module.css';
-import { INITIAL_TEMPLATES, PREBUILT_SECTIONS } from './templates';
+import { PREBUILT_SECTIONS } from '../../data/templates';
+import TemplateGallery from '../TemplateGallery/TemplateGallery';
 
 const ItemTypes = {
     SIDEBAR_ITEM: 'sidebarItem',
-    CANVAS_ITEM: 'canvasItem',
 };
 
 const FONT_FAMILIES = [
@@ -93,8 +93,7 @@ const Editor = () => {
     const isFirstLoad = useRef(true);
     const [history, setHistory] = useState([]);
     const [future, setFuture] = useState([]);
-    const [templates, setTemplates] = useState(INITIAL_TEMPLATES);
-    const [showTemplates, setShowTemplates] = useState(false);
+    const [showGallery, setShowGallery] = useState(false);
     const [openCategories, setOpenCategories] = useState({
         content: true,
         layout: true,
@@ -222,25 +221,15 @@ const Editor = () => {
         document.head.appendChild(link);
     }, []);
 
+    // Show gallery on first load after project is loaded and canvas is empty
     useEffect(() => {
-        const loadTemplates = async () => {
-            try {
-                const res = await axios.get('http://localhost:5000/api/templates');
-                if (res.data && res.data.length > 0) {
-                    // Combine DB templates with initial ones, avoiding duplicates
-                    const dbTemplates = res.data.map(t => ({ ...t, id: t._id })); // use _id as id
-                    const allTemplateNames = new Set(dbTemplates.map(t => t.name));
-                    const uniqueInitial = INITIAL_TEMPLATES.filter(t => !allTemplateNames.has(t.name));
-                    setTemplates([...dbTemplates, ...uniqueInitial]);
-                }
-            } catch (error) {
-                console.error('Failed to load templates:', error);
-                // Fallback to initial templates
-                setTemplates(INITIAL_TEMPLATES);
-            }
-        };
-        loadTemplates();
-    }, []);
+        if (!isLoaded) return;
+        const activePage = pages.find(p => p.id === activePageId) || pages[0];
+        if (!activePage || activePage.components.length === 0) {
+            setShowGallery(true);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isLoaded]);
 
     useEffect(() => {
         const loadLatestProject = async () => {
@@ -500,7 +489,7 @@ const Editor = () => {
             id: Date.now() + idx,
             style: {
                 ...comp.style,
-                position: 'relative', // Sections usually stack relatively
+                position: comp.style?.position || 'relative',
                 margin: comp.style?.margin || '0 auto'
             }
         }));
@@ -509,48 +498,20 @@ const Editor = () => {
     };
 
     const [{ isOver }, drop] = useDrop(() => ({
-        accept: [ItemTypes.SIDEBAR_ITEM, ItemTypes.CANVAS_ITEM],
+        accept: [ItemTypes.SIDEBAR_ITEM],
         hover: (item, monitor) => {
             if (!canvasRef.current) return;
             const canvasRect = canvasRef.current.getBoundingClientRect();
             const clientOffset = monitor.getClientOffset();
-
             if (!clientOffset) return;
 
-            const borderLeft = canvasRef.current.clientLeft || 0;
-            const borderTop = canvasRef.current.clientTop || 0;
-
-            let x, y;
-
-            if (item.width && item.height) {
-                x = clientOffset.x - canvasRect.left - borderLeft - (item.width / 2);
-                y = clientOffset.y - canvasRect.top - borderTop - (item.height / 2);
-            } else {
-                x = clientOffset.x - canvasRect.left - borderLeft;
-                y = clientOffset.y - canvasRect.top - borderTop;
-            }
-
-            const w = item.width || 0;
-            const h = item.height || 0;
-            const itemCenterX = x + w / 2;
-            const itemCenterY = y + h / 2;
-
+            const x = clientOffset.x - canvasRect.left;
             const centerX = canvasRect.width / 2;
-            const centerY = canvasRect.height / 2;
-
             const threshold = 15;
-            let newGuideX = null;
-            let newGuideY = null;
-
-            if (Math.abs(itemCenterX - centerX) < threshold) {
-                newGuideX = centerX;
-            }
-            if (Math.abs(itemCenterY - centerY) < threshold) {
-                newGuideY = centerY;
-            }
 
             setGuides(prev => {
-                if (prev.x !== newGuideX || prev.y !== newGuideY) return { x: newGuideX, y: newGuideY };
+                const newGuideX = Math.abs(x - centerX) < threshold ? centerX : null;
+                if (prev.x !== newGuideX) return { x: newGuideX, y: null };
                 return prev;
             });
         },
@@ -558,70 +519,27 @@ const Editor = () => {
             if (!canvasRef.current) return;
             const canvasRect = canvasRef.current.getBoundingClientRect();
             const clientOffset = monitor.getClientOffset();
-
             if (!clientOffset) return;
 
-            let x, y;
+            const scrollLeft = canvasRef.current.scrollLeft || 0;
+            const scrollTop = canvasRef.current.scrollTop || 0;
+            const borderLeft = canvasRef.current.clientLeft || 0;
+            const borderTop = canvasRef.current.clientTop || 0;
 
-            if (item.id) {
-                // Existing item: Use delta
-                const delta = monitor.getDifferenceFromInitialOffset();
-                if (!delta) return;
-
-                x = Math.round(item.originalLeft + delta.x);
-                y = Math.round(item.originalTop + delta.y);
-            } else {
-                // New item: relative to canvas
-                const borderLeft = canvasRef.current.clientLeft || 0;
-                const borderTop = canvasRef.current.clientTop || 0;
-                x = clientOffset.x - canvasRect.left - borderLeft;
-                y = clientOffset.y - canvasRect.top - borderTop;
-
-                // Center new items if possible
-                /*
-                if (item.type) {
-                     // Approximate centering for new items if needed
-                     // Not strictly necessary as they don't have dims yet usually
-                }
-                */
-            }
+            let x = (clientOffset.x - canvasRect.left - borderLeft) + scrollLeft;
+            let y = (clientOffset.y - canvasRect.top - borderTop) + scrollTop;
 
             // Grid Snapping (10px)
             const gridSize = 10;
             x = Math.round(x / gridSize) * gridSize;
             y = Math.round(y / gridSize) * gridSize;
 
-            // Boundary Constraints
-            const w = item.width || 0;
-            const h = item.height || 0;
-
-            // Limit horizontally (0 to canvas width - item width)
-            const maxW = canvasRect.width;
-            x = Math.max(0, Math.min(x, maxW - w));
-
-            // Limit vertically (0 to reasonable bottom - let's say 10000px for now)
+            // Boundaries
+            x = Math.max(0, x);
             y = Math.max(0, y);
 
-            // Snap to center logic (if within threshold)
-            const centerX = canvasRect.width / 2;
-            const threshold = 15;
-
-            if (w > 0 && h > 0) {
-                if (Math.abs((x + w / 2) - centerX) < threshold) {
-                    x = Math.round((centerX - w / 2) / gridSize) * gridSize;
-                }
-                // Optional: Snap to vertical center if needed
-                // if (Math.abs((y + h / 2) - centerY) < threshold) {
-                //     y = Math.round((centerY - h / 2) / gridSize) * gridSize;
-                // }
-            }
-
             setGuides({ x: null, y: null });
-            if (item.id) {
-                moveComponent(item.id, x, y);
-            } else {
-                addComponentToCanvas(item, x, y);
-            }
+            addComponentToCanvas(item, x, y);
         },
         collect: (monitor) => ({
             isOver: !!monitor.isOver(),
@@ -781,16 +699,32 @@ const Editor = () => {
     };
 
     const loadTemplate = (template) => {
+        if (!template) {
+            // Start from blank
+            setShowGallery(false);
+            return;
+        }
         if (components.length > 0) {
             if (!window.confirm('Loading a template will replace your current work. Are you sure?')) {
                 return;
             }
         }
         saveHistory();
-        // Deep copy to ensure new IDs don't conflict with old references if needed, though simple replacement works here
-        // For templates, we currently replace the *current page* content
-        setComponents(JSON.parse(JSON.stringify(template.components)));
-        setShowTemplates(false);
+        // Deep-copy and normalize positioning so components stack like a real page
+        const normalized = JSON.parse(JSON.stringify(template.components)).map((comp, idx) => ({
+            ...comp,
+            id: Date.now() + idx, // ensure unique IDs
+            style: {
+                ...comp.style,
+                position: comp.style?.position || 'relative',
+                margin: comp.style?.margin || '0 auto',
+            },
+            responsiveStyles: comp.responsiveStyles || { tablet: {}, mobile: {} },
+            states: comp.states || { hover: {}, active: {} },
+            link: comp.link || '',
+        }));
+        setComponents(normalized);
+        setShowGallery(false);
     };
 
     const handleSaveAsTemplate = () => {
@@ -809,12 +743,10 @@ const Editor = () => {
         }
 
         try {
-            const res = await axios.post('http://localhost:5000/api/templates', {
+            await axios.post('http://localhost:5000/api/templates', {
                 name: tempTemplateName,
                 components
             });
-            const savedTemplate = { ...res.data, id: res.data._id };
-            setTemplates(prev => [...prev, savedTemplate]);
             setShowSaveModal(false);
             alert(`Template "${tempTemplateName}" saved successfully!`);
         } catch (error) {
@@ -946,21 +878,6 @@ const Editor = () => {
         a.remove();
     };
 
-    const handleDeleteTemplate = async (e, templateId) => {
-        e.stopPropagation();
-        if (!window.confirm('Are you sure you want to delete this template?')) {
-            return;
-        }
-
-        try {
-            await axios.delete(`http://localhost:5000/api/templates/${templateId}`);
-            setTemplates(prev => prev.filter(t => t._id !== templateId));
-        } catch (error) {
-            console.error('Error deleting template:', error);
-            alert('Failed to delete template');
-        }
-    };
-
     const duplicateComponent = (id) => {
         saveHistory();
         const componentIndex = components.findIndex(c => c.id === id);
@@ -1059,10 +976,7 @@ const Editor = () => {
                     {!previewMode && (
                         <>
                             <button onClick={handleSaveAsTemplate} className={`${styles.btn} ${styles['btn-success']}`}>Save as Template</button>
-                            <button onClick={() => setShowTemplates(true)} className={`${styles.btn} ${styles['btn-primary']}`}>Templates</button>
-                            <a href="/templates/perfume-store" target="_blank" rel="noopener noreferrer" className={`${styles.btn} ${styles['btn-secondary']}`} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
-                                <i className="fas fa-external-link-alt" style={{ marginRight: '5px' }}></i> Perfume Demo
-                            </a>
+                            <button onClick={() => setShowGallery(true)} className={`${styles.btn} ${styles['btn-primary']}`}><i className="fas fa-layer-group" style={{ marginRight: '6px' }} />Templates</button>
                             <button onClick={undo} disabled={history.length === 0} className={`${styles.btn} ${styles['btn-warning']}`}>Undo</button>
                             <button onClick={redo} disabled={future.length === 0} className={`${styles.btn} ${styles['btn-warning']}`}>Redo</button>
                             <button onClick={handleExportHTML} className={`${styles.btn} ${styles['btn-primary']}`}>Export HTML</button>
@@ -1232,6 +1146,7 @@ const Editor = () => {
                                 updateComponentContent={updateComponentContent}
                                 onSelect={!previewMode ? setSelectedId : () => { }}
                                 onDragStart={saveHistory}
+                                onMove={moveComponent}
                                 previewMode={previewMode}
                                 viewMode={viewMode}
                             />
@@ -1761,40 +1676,12 @@ const Editor = () => {
                 </div>
             )}
 
-            {/* Templates Modal */}
-            {showTemplates && (
-                <div className={styles['modal-overlay']}>
-                    <div className={styles['modal-content']}>
-                        <h3>Choose a Template</h3>
-                        <div className={styles['template-grid']}>
-                            {templates.map(template => (
-                                <div key={template.id} className={styles['template-item']}>
-                                    <button
-                                        onClick={() => loadTemplate(template)}
-                                        className={styles['template-btn']}
-                                    >
-                                        {template.name}
-                                    </button>
-                                    {template._id && (
-                                        <button
-                                            onClick={(e) => handleDeleteTemplate(e, template._id)}
-                                            className={styles['delete-btn']}
-                                            title="Delete Template"
-                                        >
-                                            ✕
-                                        </button>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                        <button
-                            onClick={() => setShowTemplates(false)}
-                            className={`${styles.btn} ${styles['btn-secondary']} ${styles['w-100']} ${styles['mt-20']}`}
-                        >
-                            Cancel
-                        </button>
-                    </div>
-                </div>
+            {/* Professional Template Gallery */}
+            {showGallery && (
+                <TemplateGallery
+                    onSelect={loadTemplate}
+                    onClose={() => setShowGallery(false)}
+                />
             )}
         </div>
     );

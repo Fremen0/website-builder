@@ -59,7 +59,6 @@ A professional, high-performance drag-and-drop website builder designed for spee
 
 ## 📸 Screenshots
 
-*(Add your screenshots here to showcase the stunning UI!)*
 
 ## 📄 License
 

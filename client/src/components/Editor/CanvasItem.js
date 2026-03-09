@@ -1,50 +1,19 @@
-import React, { useRef, useEffect, useState } from 'react';
-import { useDrag } from 'react-dnd';
-import { getEmptyImage } from 'react-dnd-html5-backend';
+import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const ItemTypes = {
-    CANVAS_ITEM: 'canvasItem',
-};
-
-const CanvasItem = ({ id, type, content, link, onSelect, style, responsiveStyles, states, onDragStart, previewMode, selected, updateComponentStyles, updateComponentContent, viewMode }) => {
+const CanvasItem = ({ id, type, content, link, onSelect, style, responsiveStyles, states, onDragStart, previewMode, selected, updateComponentStyles, updateComponentContent, viewMode, onMove }) => {
     const [isHovered, setIsHovered] = useState(false);
-    const [isActive, setIsActive] = useState(false);
     const [isResizing, setIsResizing] = useState(false);
     const [isEditingText, setIsEditingText] = useState(false);
+    const [isDragging, setIsDragging] = useState(false);
     const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
     const ref = useRef(null);
     const contentEditableRef = useRef(null);
-
-    const [{ isDragging, currentOffset }, drag, preview] = useDrag({
-        type: ItemTypes.CANVAS_ITEM,
-        item: () => {
-            if (onDragStart) onDragStart();
-            const rect = ref.current.getBoundingClientRect();
-            return {
-                id,
-                initialClientRect: { x: rect.left, y: rect.top },
-                width: rect.width,
-                height: rect.height,
-                originalLeft: parseFloat(style.left) || 0,
-                originalTop: parseFloat(style.top) || 0
-            };
-        },
-        collect: (monitor) => ({
-            isDragging: monitor.isDragging(),
-            currentOffset: monitor.getDifferenceFromInitialOffset(),
-        }),
-    });
-
-    useEffect(() => {
-        preview(getEmptyImage(), { captureDraggingState: true });
-    }, [preview]);
+    const dragFlagRef = useRef(false);
 
     useEffect(() => {
         if (selected && isEditingText && contentEditableRef.current) {
             contentEditableRef.current.focus();
-            // Optional: Select all text when editing starts
-            // document.execCommand('selectAll', false, null);
         } else {
             setIsEditingText(false);
         }
@@ -57,9 +26,122 @@ const CanvasItem = ({ id, type, content, link, onSelect, style, responsiveStyles
         }
     };
 
-    // Only enable dragging if we are not editing text
-    drag(isEditingText ? null : ref);
+    // ─────────────────────────────────────────────────────────
+    // Wix-style custom mouse drag — zero-latency direct DOM updates
+    // ─────────────────────────────────────────────────────────
+    const handleMouseDown = useCallback((e) => {
+        if (previewMode || isEditingText || isResizing) return;
+        if (e.button !== 0) return;
+        // Don't start drag from resize handles or editable content
+        if (e.target.closest('[data-resize-handle]')) return;
+        if (e.target.isContentEditable) return;
 
+        e.stopPropagation();
+        onSelect(id);
+
+        const el = ref.current;
+        if (!el) return;
+
+        // Find canvas container (direct parent with position:relative)
+        const canvas = el.parentElement;
+        if (!canvas) return;
+
+        const canvasRect = canvas.getBoundingClientRect();
+        const elRect = el.getBoundingClientRect();
+        const scrollLeft = canvas.scrollLeft || 0;
+        const scrollTop = canvas.scrollTop || 0;
+
+        // Calculate starting absolute position relative to canvas
+        let startLeft, startTop;
+        if (style.position === 'absolute' && style.left != null && style.top != null) {
+            startLeft = parseFloat(style.left) || 0;
+            startTop = parseFloat(style.top) || 0;
+        } else {
+            // Convert relative/static position to absolute coords
+            startLeft = elRect.left - canvasRect.left + scrollLeft;
+            startTop = elRect.top - canvasRect.top + scrollTop;
+        }
+
+        const startMouseX = e.clientX;
+        const startMouseY = e.clientY;
+        const moveThreshold = 3; // Pixels before drag starts (allows clicking)
+        let hasDragStarted = false;
+        dragFlagRef.current = false;
+
+        const gridSize = 10;
+        const canvasWidth = canvas.clientWidth;
+        const elWidth = elRect.width;
+        const centerX = canvasWidth / 2;
+        const snapThreshold = 12;
+
+        const onMouseMove = (moveEvent) => {
+            const dx = moveEvent.clientX - startMouseX;
+            const dy = moveEvent.clientY - startMouseY;
+
+            // Don't start drag until threshold is exceeded (prevents accidental drags on click)
+            if (!hasDragStarted) {
+                if (Math.abs(dx) < moveThreshold && Math.abs(dy) < moveThreshold) return;
+                hasDragStarted = true;
+                dragFlagRef.current = true;
+                setIsDragging(true);
+                if (onDragStart) onDragStart();
+                // Force absolute mode
+                el.style.position = 'absolute';
+                el.style.margin = '0';
+            }
+
+            let newLeft = startLeft + dx;
+            let newTop = startTop + dy;
+
+            // Grid snap
+            newLeft = Math.round(newLeft / gridSize) * gridSize;
+            newTop = Math.round(newTop / gridSize) * gridSize;
+
+            // Boundaries
+            newLeft = Math.max(0, Math.min(newLeft, canvasWidth - elWidth));
+            newTop = Math.max(0, newTop);
+
+            // Center snap
+            const itemCenterX = newLeft + elWidth / 2;
+            if (Math.abs(itemCenterX - centerX) < snapThreshold) {
+                newLeft = Math.round((centerX - elWidth / 2) / gridSize) * gridSize;
+            }
+
+            // ★ Direct DOM update — bypasses React for instant feedback
+            el.style.left = `${newLeft}px`;
+            el.style.top = `${newTop}px`;
+            el.style.zIndex = '1000';
+            el.style.willChange = 'left, top';
+        };
+
+        const onMouseUp = () => {
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+
+            if (hasDragStarted) {
+                const finalLeft = parseFloat(el.style.left) || 0;
+                const finalTop = parseFloat(el.style.top) || 0;
+
+                el.style.willChange = '';
+                setIsDragging(false);
+
+                // Commit final position to React state
+                if (onMove) {
+                    onMove(id, finalLeft, finalTop);
+                }
+            }
+
+            // Defer resetting the flag so onClick doesn't fire after drag
+            setTimeout(() => { dragFlagRef.current = false; }, 0);
+        };
+
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+    }, [previewMode, isEditingText, isResizing, style, id, onSelect, onDragStart, onMove]);
+
+    // ─────────────────────────────────────────────────────────
+    // Resize handler (unchanged)
+    // ─────────────────────────────────────────────────────────
     const handleResizeMouseDown = (e, direction) => {
         e.stopPropagation();
         setIsResizing(true);
@@ -70,7 +152,6 @@ const CanvasItem = ({ id, type, content, link, onSelect, style, responsiveStyles
         const startHeight = parseFloat(computedStyle.height);
         const startLeft = parseFloat(style.left) || 0;
 
-        // Canvas width limit (considering 1200px desktop max-width)
         const canvasWidth = 1200;
 
         setDimensions({ width: Math.round(startWidth), height: Math.round(startHeight) });
@@ -82,20 +163,24 @@ const CanvasItem = ({ id, type, content, link, onSelect, style, responsiveStyles
 
             let newWidth = startWidth;
             let newHeight = startHeight;
-
             const gridSize = 10;
 
             if (direction.includes('right')) {
                 newWidth = Math.round((startWidth + deltaX) / gridSize) * gridSize;
-                // Clamp width (from current position to canvas edge)
                 newWidth = Math.max(10, Math.min(newWidth, canvasWidth - startLeft));
                 ref.current.style.width = `${newWidth}px`;
             }
             if (direction.includes('bottom')) {
                 newHeight = Math.round((startHeight + deltaY) / gridSize) * gridSize;
-                // Clamp height (reasonable min)
                 newHeight = Math.max(10, newHeight);
                 ref.current.style.height = `${newHeight}px`;
+            }
+            if (direction.includes('left')) {
+                const newLeftEdge = startLeft + deltaX;
+                newWidth = Math.round((startWidth - deltaX) / gridSize) * gridSize;
+                newWidth = Math.max(10, newWidth);
+                ref.current.style.width = `${newWidth}px`;
+                ref.current.style.left = `${Math.round(newLeftEdge / gridSize) * gridSize}px`;
             }
 
             setDimensions({ width: Math.round(newWidth), height: Math.round(newHeight) });
@@ -107,10 +192,14 @@ const CanvasItem = ({ id, type, content, link, onSelect, style, responsiveStyles
             document.removeEventListener('mouseup', onMouseUp);
 
             if (ref.current && updateComponentStyles) {
-                updateComponentStyles(id, {
+                const newStyles = {
                     width: ref.current.style.width,
                     height: ref.current.style.height
-                });
+                };
+                if (direction.includes('left')) {
+                    newStyles.left = ref.current.style.left;
+                }
+                updateComponentStyles(id, newStyles);
             }
         };
 
@@ -118,9 +207,12 @@ const CanvasItem = ({ id, type, content, link, onSelect, style, responsiveStyles
         document.addEventListener('mouseup', onMouseUp);
     };
 
+    // ─────────────────────────────────────────────────────────
+    // Render content
+    // ─────────────────────────────────────────────────────────
     const renderContent = () => {
         if (type === 'image') {
-            return <img src={content} alt="Uploaded" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', borderRadius: style.borderRadius }} />;
+            return <img src={content} alt="Uploaded" draggable={false} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', borderRadius: style.borderRadius, pointerEvents: 'none' }} />;
         } else if (type === 'video') {
             return (
                 <div style={{ pointerEvents: 'none', width: '100%', height: '100%', minHeight: '100px', background: '#000', borderRadius: style.borderRadius, overflow: 'hidden' }}>
@@ -142,7 +234,7 @@ const CanvasItem = ({ id, type, content, link, onSelect, style, responsiveStyles
                     onBlur={handleTextBlur}
                     onKeyDown={(e) => {
                         if (e.key === 'Enter' && type !== 'text') {
-                            e.preventDefault(); // Don't allow line breaks in buttons or single-line headings
+                            e.preventDefault();
                             e.target.blur();
                         }
                     }}
@@ -152,6 +244,7 @@ const CanvasItem = ({ id, type, content, link, onSelect, style, responsiveStyles
                         outline: 'none',
                         cursor: isEditingText ? 'text' : 'inherit',
                         userSelect: isEditingText ? 'text' : 'none',
+                        WebkitUserSelect: isEditingText ? 'text' : 'none',
                         display: 'flex',
                         alignItems: style.alignItems || 'center',
                         justifyContent: style.justifyContent || 'center',
@@ -166,31 +259,31 @@ const CanvasItem = ({ id, type, content, link, onSelect, style, responsiveStyles
         }
     };
 
+    // ─────────────────────────────────────────────────────────
+    // Computed styles
+    // ─────────────────────────────────────────────────────────
     const currentStyles = {
         ...style,
-        position: style.position || 'absolute',
+        position: style?.position || 'absolute',
         ...(viewMode !== 'desktop' && responsiveStyles ? responsiveStyles[viewMode] : {}),
         ...(isHovered && states?.hover ? states.hover : {}),
-        ...(isActive && states?.active ? states.active : {})
     };
 
+    // ─────────────────────────────────────────────────────────
+    // Render
+    // ─────────────────────────────────────────────────────────
     return (
-        <motion.div
+        <div
             ref={ref}
             id={`component-${id}`}
-            animate={{
-                outline: selected && !previewMode ? '2px solid #6366f1' : '0px solid transparent',
-                outlineOffset: '2px',
-                boxShadow: selected ? '0 10px 25px -5px rgba(0, 0, 0, 0.2)' : 'none',
-                scale: isActive ? 0.98 : (isHovered && !selected ? 1.01 : 1),
-                zIndex: selected || isDragging ? 1000 : style.zIndex || 1
+            onMouseDown={handleMouseDown}
+            onClick={(e) => {
+                e.stopPropagation();
+                // Prevent selection after drag
+                if (!dragFlagRef.current) onSelect(id);
             }}
-            transition={isDragging ? { type: false, duration: 0 } : { type: 'spring', stiffness: 300, damping: 30 }}
-            onClick={(e) => { e.stopPropagation(); onSelect(id); }}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-            onMouseDown={() => setIsActive(true)}
-            onMouseUp={() => setIsActive(false)}
+            onMouseEnter={() => !isDragging && setIsHovered(true)}
+            onMouseLeave={() => { setIsHovered(false); }}
             onDoubleClick={(e) => {
                 e.stopPropagation();
                 if (['text', 'heading', 'button'].includes(type) && !previewMode) {
@@ -199,13 +292,45 @@ const CanvasItem = ({ id, type, content, link, onSelect, style, responsiveStyles
             }}
             style={{
                 ...currentStyles,
-                cursor: isEditingText ? 'text' : (previewMode ? (link ? 'pointer' : 'default') : 'move'),
-                opacity: isDragging ? 0.4 : (currentStyles.opacity || 1),
+                cursor: isEditingText
+                    ? 'text'
+                    : (previewMode
+                        ? (link ? 'pointer' : 'default')
+                        : isDragging ? 'grabbing' : 'grab'),
+                opacity: isDragging ? 0.88 : (currentStyles.opacity || 1),
                 overflow: 'visible',
-                transform: isDragging && currentOffset ? `translate(${Math.round(currentOffset.x)}px, ${Math.round(currentOffset.y)}px)` : undefined,
+                // Selection / drag visual feedback
+                outline: (selected && !previewMode)
+                    ? (isDragging ? '2px solid #818cf8' : '2px solid #6366f1')
+                    : (isHovered && !previewMode ? '1px dashed rgba(99,102,241,0.5)' : 'none'),
+                outlineOffset: '2px',
+                boxShadow: isDragging
+                    ? '0 20px 40px -8px rgba(99, 102, 241, 0.5), 0 0 0 1px rgba(99,102,241,0.3)'
+                    : (selected && !previewMode ? '0 10px 25px -5px rgba(0, 0, 0, 0.2)' : 'none'),
+                zIndex: isDragging ? 10000 : (selected ? 1000 : (style.zIndex || 1)),
+                transition: isDragging
+                    ? 'opacity 0.15s ease, box-shadow 0.15s ease'
+                    : 'box-shadow 0.25s ease, outline 0.15s ease, opacity 0.15s ease',
+                userSelect: isEditingText ? 'text' : 'none',
+                WebkitUserSelect: isEditingText ? 'text' : 'none',
             }}
         >
-            {/* Dimension Indicator */}
+            {/* Coordinates tooltip during drag */}
+            {isDragging && (
+                <div
+                    style={{
+                        position: 'absolute', top: '-32px', left: '50%', transform: 'translateX(-50%)',
+                        background: '#6366f1', color: 'white', padding: '3px 10px', borderRadius: '6px',
+                        fontSize: '10px', fontWeight: '700', whiteSpace: 'nowrap', zIndex: 10001,
+                        boxShadow: '0 4px 12px rgba(99, 102, 241, 0.5)',
+                        letterSpacing: '0.5px', fontFamily: 'monospace',
+                    }}
+                >
+                    {Math.round(parseFloat(ref.current?.style.left) || 0)}, {Math.round(parseFloat(ref.current?.style.top) || 0)}
+                </div>
+            )}
+
+            {/* Dimension indicator during resize */}
             <AnimatePresence>
                 {isResizing && (
                     <motion.div
@@ -236,30 +361,39 @@ const CanvasItem = ({ id, type, content, link, onSelect, style, responsiveStyles
                 </a>
             ) : renderContent()}
 
-            {selected && !previewMode && (
+            {selected && !previewMode && !isDragging && (
                 <>
-                    {/* Visual Border */}
-                    <div style={{ position: 'absolute', inset: '-2px', border: '2px solid #6366f1', pointerEvents: 'none', zIndex: 10, borderRadius: `calc(${style.borderRadius || '0px'} + 2px)` }}></div>
+                    {/* Selection border */}
+                    <div style={{ position: 'absolute', inset: '-2px', border: '2px solid #6366f1', pointerEvents: 'none', zIndex: 10, borderRadius: `calc(${style.borderRadius || '0px'} + 2px)` }} />
 
                     {/* Resize Handles */}
                     <motion.div
-                        whileHover={{ scale: 1.2 }}
+                        data-resize-handle="true"
+                        whileHover={{ scale: 1.3 }}
                         style={{ position: 'absolute', top: '50%', right: '-5px', width: '10px', height: '24px', background: '#6366f1', transform: 'translateY(-50%)', cursor: 'e-resize', zIndex: 20, borderRadius: '4px', border: '2px solid white' }}
                         onMouseDown={(e) => handleResizeMouseDown(e, 'right')}
                     />
                     <motion.div
-                        whileHover={{ scale: 1.2 }}
+                        data-resize-handle="true"
+                        whileHover={{ scale: 1.3 }}
+                        style={{ position: 'absolute', top: '50%', left: '-5px', width: '10px', height: '24px', background: '#6366f1', transform: 'translateY(-50%)', cursor: 'w-resize', zIndex: 20, borderRadius: '4px', border: '2px solid white' }}
+                        onMouseDown={(e) => handleResizeMouseDown(e, 'left')}
+                    />
+                    <motion.div
+                        data-resize-handle="true"
+                        whileHover={{ scale: 1.3 }}
                         style={{ position: 'absolute', bottom: '-5px', left: '50%', width: '24px', height: '10px', background: '#6366f1', transform: 'translateX(-50%)', cursor: 's-resize', zIndex: 20, borderRadius: '4px', border: '2px solid white' }}
                         onMouseDown={(e) => handleResizeMouseDown(e, 'bottom')}
                     />
                     <motion.div
-                        whileHover={{ scale: 1.3 }}
+                        data-resize-handle="true"
+                        whileHover={{ scale: 1.5 }}
                         style={{ position: 'absolute', bottom: '-6px', right: '-6px', width: '14px', height: '14px', background: '#6366f1', cursor: 'se-resize', zIndex: 21, borderRadius: '50%', border: '2px solid white', boxShadow: '0 4px 10px rgba(0,0,0,0.3)' }}
                         onMouseDown={(e) => handleResizeMouseDown(e, 'bottom-right')}
                     />
                 </>
             )}
-        </motion.div>
+        </div>
     );
 };
 

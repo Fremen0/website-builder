@@ -43,17 +43,6 @@ export const INITIAL_TEMPLATES = [
             { id: 24, type: 'button', content: 'Send Message', style: { width: '80%', display: 'block', margin: '20px auto', backgroundColor: '#6366f1', color: '#fff', padding: '15px', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' } }
         ]
     },
-    {
-        id: 'luxury-perfume-store',
-        name: 'Luxury Perfume Store',
-        components: [
-            { id: 100, type: 'heading', content: 'Explore the Essence of Royalty', style: { fontSize: '1.2rem', fontWeight: '500', color: '#d4af37', textAlign: 'center', letterSpacing: '0.3em', textTransform: 'uppercase', marginBottom: '1.5rem', display: 'block', backgroundColor: '#0a0a0a', padding: '100px 20px 20px 20px' } },
-            { id: 101, type: 'heading', content: 'OUD ROYAL', style: { fontSize: '5rem', fontWeight: '800', textAlign: 'center', backgroundColor: '#0a0a0a', padding: '0 20px 40px 20px', color: '#ffffff', letterSpacing: '0.1em', fontFamily: 'serif' } },
-            { id: 102, type: 'text', content: 'Experience the rarest oud, handpicked from ancient gardens. A scent that transcends time and defines true luxury.', style: { fontSize: '1.4rem', fontStyle: 'italic', textAlign: 'center', color: '#a0a0a0', backgroundColor: '#0a0a0a', padding: '0 100px 60px 100px', lineHeight: '1.8', fontFamily: 'serif' } },
-            { id: 103, type: 'button', content: 'Explore Collection', style: { backgroundColor: '#d4af37', color: '#000', padding: '15px 40px', border: 'none', borderRadius: '0', display: 'block', margin: '0 auto 100px auto', cursor: 'pointer', fontSize: '1.1rem', fontWeight: '700', textTransform: 'uppercase', fontFamily: 'serif' } },
-            { id: 104, type: 'image', content: 'https://images.unsplash.com/photo-1541643600914-78b084683601?auto=format&fit=crop&q=80&w=1000', style: { width: '80%', height: 'auto', display: 'block', margin: '0 auto', boxShadow: '0 30px 60px rgba(0,0,0,0.8)' } }
-        ]
-    }
 ];
 
 export const PREBUILT_SECTIONS = [
