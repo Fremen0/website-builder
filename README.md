@@ -1,35 +1,32 @@
-# Website Builder
+# TWB — Template Website Builder
 
-A professional, high-performance drag-and-drop website builder designed for speed, precision, and ease of use. Build stunning, responsive websites in minutes with a professional "Dark Pro Studio" interface.
+A professional, high-performance drag-and-drop website builder designed for speed, precision, and ease of use. Build stunning, responsive websites in minutes with a clean, modern interface inspired by top-tier tools like Webflow and Wix.
 
 ## ✨ Key Features
 
-- **Dark Pro Studio UI**: A sleek, dark-themed editor inspired by professional design tools like Figma and Framer.
-- **Navigator (Layers) Panel**: Manage complex designs with a hierarchical view of all components on the page.
-- **Pre-built Sections Library**: Instantly add professional-grade Hero sections, Feature grids, and Footers.
-- **Professional Typography**: Support for premium Google Fonts (Montserrat, Playfair Display, Inter) with live preview.
-- **Precision Customization**:
-  - Full control over Typography, Colors, Layout, and Spacing.
-  - Advanced Border styles (Radius, Width, Color).
-  - Effects like Drop Shadows, Opacity, and Z-index layering.
-- **Responsive Workspace**: Preview and design for Desktop, Tablet, and Mobile devices.
-- **History Management**: Reliable Undo/Redo system to experiment with designs safely.
-- **Project & Template Management**: Save your designs as templates or projects to revisit them later.
-- **Professional Export**: Export your design to clean, production-ready HTML and CSS.
+- **Hybrid Layout Engine**: Supports both Freeform (Absolute Positioning like Wix/Figma) for maximum creative freedom and CSS Flow (Relative/Flexbox like Webflow) for structured components.
+- **Infinite Canvas Workspace**: Edge-to-edge design area with a realistic full-page viewport, allowing you to build and preview naturally without layout constraints.
+- **Modern Clean UI**: A sleek, beautifully crafted Light Mode interface with glassmorphism elements, collapsible categorized sidebars, and an intuitive floating toolbar.
+- **Advanced State Management**: Preview and edit specific pseudo-classes live on the canvas, such as `Normal`, `Hover`, and `Active` states.
+- **Navigator (Layers) Panel**: Manage complex designs effortlessly with a hierarchical view of all components, drag-to-reorder, and pin/unpin tools.
+- **Pre-built Templates & Sections**: Jumpstart your project with imported professional-grade templates, Hero sections, Feature grids, and more.
+- **Responsive Workspace**: Design flawlessly across all devices with instant toggles for Desktop, Tablet, and Mobile views.
+- **History & Recovery**: Reliable Undo/Redo system to experiment with designs safely and save snapshots.
+- **Data Export**: Export your design directly to clean, production-ready HTML/CSS, or download the raw JSON schema.
 
 ## 🛠️ Tech Stack
 
-- **Frontend**: React.js, React DnD (Drag and Drop), CSS Modules.
+- **Frontend**: React.js, React DnD (Drag and Drop), CSS Modules, HTML5 Canvas concepts.
 - **Backend**: Node.js, Express.js.
-- **Database**: MongoDB (Mongoose).
-- **Icons & Fonts**: Font Awesome, Google Fonts API.
+- **Database**: MongoDB (Mongoose) for Projects and Templates storage.
+- **Icons & Fonts**: Font Awesome 5, Google Fonts API Integration.
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 
-- Node.js (v14+)
-- MongoDB (running locally or a Cloud URI)
+- Node.js (v16+)
+- MongoDB (running locally or a Cloud URI cluster)
 
 ### Installation
 
@@ -42,18 +39,27 @@ A professional, high-performance drag-and-drop website builder designed for spee
 2. **Install Dependencies**:
    ```bash
    # Install client dependencies
-   cd client && npm install
+   cd client
+   npm install
    
    # Install server dependencies
-   cd ../server && npm install
+   cd ../server
+   npm install
    ```
 
-3. **Running the Application**:
+3. **Environment Setup**:
+   Create a `.env` file in the `/server` directory and add your MongoDB connection string:
+   ```env
+   MONGO_URI=mongodb://localhost:27017/website-builder
+   PORT=5000
+   ```
+
+4. **Running the Application**:
    ```bash
-   # Run Backend (from /server)
+   # Run Backend (from /server directory)
    npm run dev
    
-   # Run Frontend (from /client)
+   # Run Frontend (from /client directory)
    npm start
    ```
 
