@@ -36,22 +36,21 @@ A professional, high-performance drag-and-drop website builder designed for spee
    cd website-builder
    ```
 
-2. **Install Dependencies**:
+2. **Automated Setup (Recommended)**:
+   Run the included bash script to instantly install all dependencies and setup the default environment variables.
    ```bash
-   # Install client dependencies
-   cd client
-   npm install
-   
-   # Install server dependencies
-   cd ../server
-   npm install
+   ./install.sh
    ```
 
-3. **Environment Setup**:
-   Create a `.env` file in the `/server` directory and add your MongoDB connection string:
-   ```env
-   MONGO_URI=mongodb://localhost:27017/website-builder
-   PORT=5000
+   **OR Manual Setup**:
+   ```bash
+   # Install client and server dependencies
+   cd client && npm install
+   cd ../server && npm install
+   
+   # Create a .env file in the /server directory
+   echo "MONGO_URI=mongodb://localhost:27017/website-builder" > server/.env
+   echo "PORT=5000" >> server/.env
    ```
 
 4. **Running the Application**:
