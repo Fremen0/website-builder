@@ -34,3 +34,8 @@ coverage/
 .continue/
 .cursor/
 .cursorrules
+
+# Database
+data/
+mongod.log
+server/mongod.log
