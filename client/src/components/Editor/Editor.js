@@ -519,6 +519,84 @@ const Editor = () => {
                 };
                 defaultContent = 'This is a text paragraph. You can edit this directly.';
                 break;
+            case 'form':
+                defaultStyle = {
+                    width: '350px',
+                    height: 'auto',
+                };
+                defaultContent = 'Contact Us';
+                break;
+            case 'map':
+                defaultStyle = {
+                    width: '100%',
+                    height: '300px',
+                };
+                defaultContent = 'New York, NY';
+                break;
+            case 'audio':
+                defaultStyle = {
+                    width: '300px',
+                    height: '60px',
+                };
+                defaultContent = '';
+                break;
+            case 'iframe':
+                defaultStyle = {
+                    width: '100%',
+                    height: '250px',
+                };
+                defaultContent = '<p style="text-align: center; color: #94a3b8; padding: 20px;">Embed Code Here</p>';
+                break;
+            case 'slider':
+                defaultStyle = {
+                    width: '100%',
+                    height: '300px',
+                    backgroundColor: '#e2e8f0',
+                    borderRadius: '12px'
+                };
+                defaultContent = 'Slider Component';
+                break;
+            case 'icon':
+                defaultStyle = {
+                    width: '50px',
+                    height: '50px',
+                    color: '#6366f1',
+                    fontSize: '40px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                };
+                defaultContent = 'fas fa-star';
+                break;
+            case 'navbar':
+                defaultStyle = {
+                    width: '100%',
+                    height: '60px',
+                    backgroundColor: '#ffffff',
+                    borderBottom: '1px solid #e2e8f0',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '0 20px',
+                    position: 'absolute',
+                    top: '0',
+                    left: '0'
+                };
+                defaultContent = 'Navbar';
+                break;
+            case 'grid':
+                defaultStyle = {
+                    width: '100%',
+                    height: '300px',
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: '20px',
+                    padding: '20px',
+                    backgroundColor: '#f8fafc',
+                    border: '1px dashed #cbd5e1'
+                };
+                defaultContent = 'Grid Section';
+                break;
             default:
                 defaultStyle = {
                     color: '#1e293b',
@@ -1119,6 +1197,14 @@ const Editor = () => {
                             <SidebarItem type="button" label="Button" icon="fas fa-square" />
                             <SidebarItem type="input" label="Input" icon="fas fa-i-cursor" />
                             <SidebarItem type="divider" label="Divider" icon="fas fa-minus" />
+                            <SidebarItem type="form" label="Form Block" icon="fas fa-list-alt" />
+                            <SidebarItem type="map" label="Google Maps" icon="fas fa-map-marker-alt" />
+                            <SidebarItem type="audio" label="Audio File" icon="fas fa-music" />
+                            <SidebarItem type="iframe" label="Embed Code" icon="fas fa-code" />
+                            <SidebarItem type="slider" label="Image Slider" icon="fas fa-images" />
+                            <SidebarItem type="icon" label="Icon" icon="fas fa-star" />
+                            <SidebarItem type="navbar" label="Navigation Bar" icon="fas fa-bars" />
+                            <SidebarItem type="grid" label="Grid Layout" icon="fas fa-th" />
                         </div>
 
                         <div style={{ marginTop: '24px', borderTop: '1px solid var(--border-color)', paddingTop: '20px' }}>

@@ -221,6 +221,89 @@ const CanvasItem = ({ id, type, content, link, onSelect, style, responsiveStyles
             );
         } else if (type === 'input') {
             return <input type="text" placeholder={content} style={{ width: '100%', height: '100%', padding: '10px', pointerEvents: 'none', borderRadius: style.borderRadius, border: '1px solid #ddd' }} readOnly />;
+        } else if (type === 'form') {
+            return (
+                <form 
+                    style={{ width: '100%', height: '100%', padding: '20px', borderRadius: style.borderRadius, border: '1px solid #e2e8f0', background: 'rgba(255, 255, 255, 0.5)', backdropFilter: 'blur(10px)', display: 'flex', flexDirection: 'column', gap: '15px', pointerEvents: 'none' }}
+                >
+                    <h4 style={{ margin: 0, color: '#1e293b' }}>{content || 'Contact Us'}</h4>
+                    <input type="text" placeholder="Name" style={{ padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+                    <input type="email" placeholder="Email" style={{ padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1' }} />
+                    <textarea placeholder="Message" style={{ padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', minHeight: '80px', resize: 'none' }}></textarea>
+                    <button type="button" style={{ padding: '10px 15px', background: '#6366f1', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold' }}>Submit</button>
+                </form>
+            );
+        } else if (type === 'map') {
+            return (
+                <div style={{ pointerEvents: 'none', width: '100%', height: '100%', minHeight: '200px', background: '#e2e8f0', borderRadius: style.borderRadius, overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b' }}>
+                    <iframe 
+                        width="100%" 
+                        height="100%" 
+                        style={{ border: 0 }} 
+                        loading="lazy" 
+                        allowFullScreen 
+                        referrerPolicy="no-referrer-when-downgrade" 
+                        src={`https://www.google.com/maps/embed/v1/place?key=YOUR_API_KEY&q=${encodeURIComponent(content || 'New York, NY')}`}>
+                    </iframe>
+                </div>
+            );
+        } else if (type === 'audio') {
+            return (
+                <div style={{ pointerEvents: 'none', width: '100%', padding: '10px', background: 'rgba(255, 255, 255, 0.7)', backdropFilter: 'blur(10px)', borderRadius: '30px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '15px' }}>
+                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#6366f1', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <i className="fas fa-play"></i>
+                    </div>
+                    <div style={{ flex: 1, height: '4px', background: '#cbd5e1', borderRadius: '2px' }}>
+                        <div style={{ width: '30%', height: '100%', background: '#6366f1', borderRadius: '2px' }}></div>
+                    </div>
+                    <span style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: '600' }}>0:00 / 3:45</span>
+                </div>
+            );
+        } else if (type === 'iframe') {
+            return (
+                <div style={{ pointerEvents: 'none', width: '100%', height: '100%', minHeight: '150px', background: '#f8fafc', borderRadius: style.borderRadius, border: '1px dashed #cbd5e1', overflow: 'hidden' }}>
+                    <div dangerouslySetInnerHTML={{ __html: content || '<p style="text-align: center; color: #94a3b8; padding: 20px;">Embed Code Here</p>' }} style={{ width: '100%', height: '100%' }} />
+                </div>
+            );
+        } else if (type === 'slider') {
+            return (
+                <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: style.borderRadius, overflow: 'hidden', background: '#cbd5e1', color: '#64748b' }}>
+                    <div style={{ position: 'absolute', inset: 0, backgroundImage: 'url(https://via.placeholder.com/800x400)', backgroundSize: 'cover', backgroundPosition: 'center', opacity: 0.5 }}></div>
+                    <i className="fas fa-chevron-left" style={{ position: 'absolute', left: '10px', fontSize: '24px', color: 'white', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}></i>
+                    <i className="fas fa-chevron-right" style={{ position: 'absolute', right: '10px', fontSize: '24px', color: 'white', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}></i>
+                    <div style={{ position: 'absolute', bottom: '10px', display: 'flex', gap: '5px' }}>
+                        <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'white' }}></span>
+                        <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'rgba(255,255,255,0.5)' }}></span>
+                        <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'rgba(255,255,255,0.5)' }}></span>
+                    </div>
+                    <span style={{ zIndex: 1, pointerEvents: 'none', background: 'rgba(255, 255, 255, 0.7)', padding: '5px 15px', borderRadius: '20px', fontWeight: 'bold' }}>{content}</span>
+                </div>
+            );
+        } else if (type === 'icon') {
+            return (
+                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <i className={content || 'fas fa-star'} style={{ fontSize: style.fontSize || '40px', color: style.color || '#6366f1' }}></i>
+                </div>
+            );
+        } else if (type === 'navbar') {
+            return (
+                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px', pointerEvents: 'none' }}>
+                    <h3 style={{ margin: 0, fontWeight: 'bold', color: '#0f172a' }}>LOGO</h3>
+                    <div style={{ display: 'flex', gap: '20px', fontWeight: '500', color: '#475569' }}>
+                        <span>Home</span>
+                        <span>About</span>
+                        <span>Services</span>
+                        <span>Contact</span>
+                    </div>
+                </div>
+            );
+        } else if (type === 'grid') {
+            return (
+                <div style={{ pointerEvents: 'none', width: '100%', height: '100%', display: 'grid', gridTemplateColumns: style.gridTemplateColumns || '1fr 1fr', gap: style.gap || '20px', padding: style.padding || '20px' }}>
+                    <div style={{ background: 'rgba(99, 102, 241, 0.1)', border: '1px dashed #6366f1', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6366f1' }}>Column 1</div>
+                    <div style={{ background: 'rgba(99, 102, 241, 0.1)', border: '1px dashed #6366f1', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6366f1' }}>Column 2</div>
+                </div>
+            );
         } else if (['text', 'heading', 'button'].includes(type) && !previewMode) {
             return (
                 <div
