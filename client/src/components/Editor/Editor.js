@@ -182,6 +182,7 @@ const Editor = () => {
     const [history, setHistory] = useState([]);
     const [future, setFuture] = useState([]);
     const [showGallery, setShowGallery] = useState(false);
+    const [showPropertiesPanel, setShowPropertiesPanel] = useState(true);
     const [openCategories, setOpenCategories] = useState({
         content: true,
         layout: true,
@@ -190,6 +191,14 @@ const Editor = () => {
         borders: false,
         effects: false
     });
+    const [openToolCategories, setOpenToolCategories] = useState({
+        layout: true,
+        basic: true,
+        media: false,
+        sections: false,
+        pages: true,
+        navigator: true
+    });
     const [toolbarPos, setToolbarPos] = useState({ top: 0, left: 0, visible: false });
     const [showSaveModal, setShowSaveModal] = useState(false);
     const [tempTemplateName, setTempTemplateName] = useState('');
@@ -197,6 +206,10 @@ const Editor = () => {
 
     const toggleCategory = (cat) => {
         setOpenCategories(prev => ({ ...prev, [cat]: !prev[cat] }));
+    };
+
+    const toggleToolCategory = (cat) => {
+        setOpenToolCategories(prev => ({ ...prev, [cat]: !prev[cat] }));
     };
 
     // Page Management Functions
@@ -881,7 +894,6 @@ const Editor = () => {
         // Hybrid Logic: Preserve 'absolute' if coordinates exist, otherwise allow 'relative' for sections
         const normalized = JSON.parse(JSON.stringify(template.components)).map((comp, idx) => {
             const hasCoords = comp.style?.left !== undefined && comp.style?.top !== undefined;
-            const isSection = comp.type === 'section';
 
             return {
                 ...comp,
@@ -1177,6 +1189,15 @@ const Editor = () => {
                     >
                         {previewMode ? 'Edit Mode' : 'Preview Mode'}
                     </button>
+                    {!previewMode && (
+                        <button
+                            onClick={() => setShowPropertiesPanel(!showPropertiesPanel)}
+                            className={`${styles.btn} ${showPropertiesPanel ? styles['btn-secondary'] : styles['btn-primary']}`}
+                            title="Toggle Properties Panel"
+                        >
+                            <i className="fas fa-sliders-h"></i>
+                        </button>
+                    )}
                     {/* User info + Logout */}
                     <UserMenu />
                 </div>
@@ -1186,78 +1207,119 @@ const Editor = () => {
                 {/* Sidebar Tools */}
                 {!previewMode && (
                     <div className={styles.sidebar}>
-                        <h3>Tools</h3>
-                        <div className={styles['sidebar-tools-grid']}>
-                            <SidebarItem type="section" label="Section" icon="fas fa-layer-group" />
-                            <SidebarItem type="div" label="Div Block" icon="fas fa-box" />
-                            <SidebarItem type="text" label="Text" icon="fas fa-paragraph" />
-                            <SidebarItem type="heading" label="Heading" icon="fas fa-heading" />
-                            <SidebarItem type="image" label="Image" icon="fas fa-image" />
-                            <SidebarItem type="video" label="Video" icon="fas fa-video" />
-                            <SidebarItem type="button" label="Button" icon="fas fa-square" />
-                            <SidebarItem type="input" label="Input" icon="fas fa-i-cursor" />
-                            <SidebarItem type="divider" label="Divider" icon="fas fa-minus" />
-                            <SidebarItem type="form" label="Form Block" icon="fas fa-list-alt" />
-                            <SidebarItem type="map" label="Google Maps" icon="fas fa-map-marker-alt" />
-                            <SidebarItem type="audio" label="Audio File" icon="fas fa-music" />
-                            <SidebarItem type="iframe" label="Embed Code" icon="fas fa-code" />
-                            <SidebarItem type="slider" label="Image Slider" icon="fas fa-images" />
-                            <SidebarItem type="icon" label="Icon" icon="fas fa-star" />
-                            <SidebarItem type="navbar" label="Navigation Bar" icon="fas fa-bars" />
-                            <SidebarItem type="grid" label="Grid Layout" icon="fas fa-th" />
+                        <div className={styles['prop-category']} style={{ background: 'transparent', border: 'none', boxShadow: 'none', marginBottom: '4px' }}>
+                            <div className={`${styles['prop-header']} ${openToolCategories.layout ? styles.open : ''}`} onClick={() => toggleToolCategory('layout')} style={{ paddingLeft: 0, paddingRight: 0 }}>
+                                <span style={{ fontSize: '0.85rem', color: 'var(--text-main)' }}><i className="fas fa-layer-group" style={{ marginRight: '6px' }}></i> Layout</span>
+                                <i className="fas fa-chevron-down"></i>
+                            </div>
+                            {openToolCategories.layout && (
+                                <div className={styles['sidebar-tools-grid']} style={{ paddingTop: '10px' }}>
+                                    <SidebarItem type="section" label="Section" icon="fas fa-layer-group" />
+                                    <SidebarItem type="div" label="Div Block" icon="fas fa-box" />
+                                    <SidebarItem type="grid" label="Grid Layout" icon="fas fa-th" />
+                                    <SidebarItem type="navbar" label="Navigation Bar" icon="fas fa-bars" />
+                                    <SidebarItem type="form" label="Form Block" icon="fas fa-list-alt" />
+                                </div>
+                            )}
                         </div>
 
-                        <div style={{ marginTop: '24px', borderTop: '1px solid var(--border-color)', paddingTop: '20px' }}>
-                            <h3>Sections</h3>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '8px' }}>
-                                {PREBUILT_SECTIONS.map(section => (
-                                    <div
-                                        key={section.id}
-                                        className={styles['sidebar-item']}
-                                        onClick={() => addSectionToCanvas(section)}
-                                        style={{ justifyContent: 'flex-start' }}
-                                    >
-                                        <i className={`${section.icon}`} style={{ marginRight: '10px', width: '16px' }}></i>
-                                        <span>{section.name}</span>
-                                    </div>
-                                ))}
+                        <div className={styles['prop-category']} style={{ background: 'transparent', border: 'none', boxShadow: 'none', marginBottom: '4px' }}>
+                            <div className={`${styles['prop-header']} ${openToolCategories.basic ? styles.open : ''}`} onClick={() => toggleToolCategory('basic')} style={{ paddingLeft: 0, paddingRight: 0 }}>
+                                <span style={{ fontSize: '0.85rem', color: 'var(--text-main)' }}><i className="fas fa-font" style={{ marginRight: '6px' }}></i> Basic Elements</span>
+                                <i className="fas fa-chevron-down"></i>
                             </div>
+                            {openToolCategories.basic && (
+                                <div className={styles['sidebar-tools-grid']} style={{ paddingTop: '10px' }}>
+                                    <SidebarItem type="text" label="Text" icon="fas fa-paragraph" />
+                                    <SidebarItem type="heading" label="Heading" icon="fas fa-heading" />
+                                    <SidebarItem type="button" label="Button" icon="fas fa-square" />
+                                    <SidebarItem type="image" label="Image" icon="fas fa-image" />
+                                    <SidebarItem type="divider" label="Divider" icon="fas fa-minus" />
+                                    <SidebarItem type="input" label="Input" icon="fas fa-i-cursor" />
+                                </div>
+                            )}
                         </div>
 
-                        <div style={{ marginTop: '24px', borderTop: '1px solid var(--border-color)', paddingTop: '20px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                                <h3 style={{ margin: 0 }}>Pages</h3>
-                                <button onClick={addPage} className={`${styles.btn} ${styles['btn-success']} ${styles['btn-sm']}`}>+ Add</button>
+                        <div className={styles['prop-category']} style={{ background: 'transparent', border: 'none', boxShadow: 'none', marginBottom: '4px' }}>
+                            <div className={`${styles['prop-header']} ${openToolCategories.media ? styles.open : ''}`} onClick={() => toggleToolCategory('media')} style={{ paddingLeft: 0, paddingRight: 0 }}>
+                                <span style={{ fontSize: '0.85rem', color: 'var(--text-main)' }}><i className="fas fa-photo-video" style={{ marginRight: '6px' }}></i> Media & Interactive</span>
+                                <i className="fas fa-chevron-down"></i>
                             </div>
-                            <div className={styles['pages-list']}>
-                                {pages.map(page => (
-                                    <div
-                                        key={page.id}
-                                        onClick={() => switchPage(page.id)}
-                                        className={`${styles['page-item']} ${activePageId === page.id ? styles.active : ''}`}
-                                    >
-                                        <span>{page.name}</span>
-                                        {pages.length > 1 && (
-                                            <span
-                                                onClick={(e) => deletePage(e, page.id)}
-                                                className={styles['delete-icon']}
-                                                title="Delete Page"
-                                            >
-                                                ✕
-                                            </span>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
+                            {openToolCategories.media && (
+                                <div className={styles['sidebar-tools-grid']} style={{ paddingTop: '10px' }}>
+                                    <SidebarItem type="video" label="Video" icon="fas fa-video" />
+                                    <SidebarItem type="audio" label="Audio File" icon="fas fa-music" />
+                                    <SidebarItem type="iframe" label="Embed Code" icon="fas fa-code" />
+                                    <SidebarItem type="slider" label="Image Slider" icon="fas fa-images" />
+                                    <SidebarItem type="map" label="Google Maps" icon="fas fa-map-marker-alt" />
+                                    <SidebarItem type="icon" label="Icon" icon="fas fa-star" />
+                                </div>
+                            )}
                         </div>
 
-                        <div style={{ marginTop: '24px', borderTop: '1px solid var(--border-color)', paddingTop: '20px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                                <h3 style={{ margin: 0 }}>Navigator</h3>
+                        <div className={styles['prop-category']} style={{ background: 'transparent', border: 'none', boxShadow: 'none', marginBottom: '4px' }}>
+                            <div className={`${styles['prop-header']} ${openToolCategories.sections ? styles.open : ''}`} onClick={() => toggleToolCategory('sections')} style={{ paddingLeft: 0, paddingRight: 0 }}>
+                                <span style={{ fontSize: '0.85rem', color: 'var(--text-main)' }}><i className="fas fa-puzzle-piece" style={{ marginRight: '6px' }}></i> Prebuilt Sections</span>
+                                <i className="fas fa-chevron-down"></i>
                             </div>
-                            <div className={styles['pages-list']}>
-                                {components.length === 0 ? (
-                                    <div style={{ padding: '10px', fontSize: '0.8rem', color: '#94a3b8', fontStyle: 'italic' }}>No elements yet</div>
+                            {openToolCategories.sections && (
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '8px', paddingTop: '10px' }}>
+                                    {PREBUILT_SECTIONS.map(section => (
+                                        <div
+                                            key={section.id}
+                                            className={styles['sidebar-item']}
+                                            onClick={() => addSectionToCanvas(section)}
+                                            style={{ justifyContent: 'flex-start' }}
+                                        >
+                                            <i className={`${section.icon}`} style={{ marginRight: '10px', width: '16px' }}></i>
+                                            <span>{section.name}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className={styles['prop-category']} style={{ background: 'transparent', border: 'none', boxShadow: 'none', marginBottom: '4px' }}>
+                            <div className={`${styles['prop-header']} ${openToolCategories.pages ? styles.open : ''}`} onClick={() => toggleToolCategory('pages')} style={{ paddingLeft: 0, paddingRight: 0 }}>
+                                <span style={{ fontSize: '0.85rem', color: 'var(--text-main)' }}><i className="fas fa-file-alt" style={{ marginRight: '6px' }}></i> Pages</span>
+                                <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <i className="fas fa-plus" onClick={(e) => { e.stopPropagation(); addPage(); }} style={{ fontSize: '12px', padding: '4px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', borderRadius: '4px', cursor: 'pointer' }}></i>
+                                    <i className="fas fa-chevron-down"></i>
+                                </div>
+                            </div>
+                            {openToolCategories.pages && (
+                                <div className={styles['pages-list']} style={{ paddingTop: '10px' }}>
+                                    {pages.map(page => (
+                                        <div
+                                            key={page.id}
+                                            onClick={() => switchPage(page.id)}
+                                            className={`${styles['page-item']} ${activePageId === page.id ? styles.active : ''}`}
+                                        >
+                                            <span>{page.name}</span>
+                                            {pages.length > 1 && (
+                                                <span
+                                                    onClick={(e) => deletePage(e, page.id)}
+                                                    className={styles['delete-icon']}
+                                                    title="Delete Page"
+                                                >
+                                                    ✕
+                                                </span>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className={styles['prop-category']} style={{ background: 'transparent', border: 'none', boxShadow: 'none', marginBottom: '4px' }}>
+                            <div className={`${styles['prop-header']} ${openToolCategories.navigator ? styles.open : ''}`} onClick={() => toggleToolCategory('navigator')} style={{ paddingLeft: 0, paddingRight: 0 }}>
+                                <span style={{ fontSize: '0.85rem', color: 'var(--text-main)' }}><i className="fas fa-sitemap" style={{ marginRight: '6px' }}></i> Navigator</span>
+                                <i className="fas fa-chevron-down"></i>
+                            </div>
+                            {openToolCategories.navigator && (
+                                <div className={styles['pages-list']} style={{ paddingTop: '10px' }}>
+                                    {components.length === 0 ? (
+                                        <div style={{ padding: '10px', fontSize: '0.8rem', color: '#94a3b8', fontStyle: 'italic' }}>No elements yet</div>
                                 ) : (
                                     components.slice().reverse().map(comp => (
                                         <div
@@ -1297,7 +1359,8 @@ const Editor = () => {
                                         </div>
                                     ))
                                 )}
-                            </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}
@@ -1331,8 +1394,6 @@ const Editor = () => {
                         {guides.y !== null && (
                             <div style={{ position: 'absolute', top: `${guides.y}px`, left: 0, right: 0, height: '1px', backgroundColor: '#e74c3c', zIndex: 1000, pointerEvents: 'none' }} />
                         )}
-
-                        {!previewMode && <h2 style={{ textAlign: 'center', color: '#bdc3c7' }}>Drag and Drop Area</h2>}
                         {components.map((comp, index) => (
                             <CanvasItem
                                 key={comp.id}
@@ -1357,7 +1418,7 @@ const Editor = () => {
                 </div>
 
                 {/* Properties Panel */}
-                {!previewMode && (
+                {!previewMode && showPropertiesPanel && (
                     <div className={styles['properties-panel']}>
                         <h3>Properties</h3>
                         {selectedComponent ? (

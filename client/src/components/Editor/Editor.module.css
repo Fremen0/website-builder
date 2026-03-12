@@ -249,26 +249,26 @@
     background-image: radial-gradient(circle at 1px 1px, rgba(0, 0, 0, 0.05) 1px, transparent 0);
     background-size: 24px 24px;
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: flex-start;
-    padding: 60px;
+    padding: 0;
     overflow: auto;
     position: relative;
 }
 
 .page-content {
     background: white;
-    box-shadow: var(--shadow-lg);
-    border-radius: 8px;
-    border: 1px solid rgba(255,255,255,0.8);
+    box-shadow: none;
+    border-radius: 0;
+    border: none;
     position: relative;
     display: block;
     transform-origin: top center;
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     width: 100%;
-    max-width: 1200px;
-    min-height: 800px;
-    overflow: hidden;
+    min-height: 2500px;
+    margin: 0 auto;
+    flex-shrink: 0;
 }
 
 .page-content.is-over {
@@ -279,10 +279,12 @@
 .page-content.preview-mode {
     box-shadow: none;
     border: none !important;
+    min-height: 100vh;
 }
 
 .page-content.desktop {
-    max-width: 1200px;
+    width: 1200px;
+    max-width: none;
 }
 
 .page-content.tablet {
@@ -394,6 +396,7 @@
     border-radius: 12px;
     overflow: hidden;
     box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+    flex-shrink: 0;
 }
 
 .prop-header {
