@@ -1,8 +1,10 @@
+require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
+
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -21,7 +23,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Database Connection (MongoDB)
 // Note: Make sure MongoDB is running locally or you have an Atlas URI
-mongoose.connect('mongodb://localhost:27017/website-builder')
+mongoose.connect('mongodb://localhost:27018/website-builder')
 .then(() => console.log('MongoDB Connected'))
 .catch(err => console.log(err));
 
@@ -31,12 +33,16 @@ app.get('/', (req, res) => {
 });
 
 // Import Routes
- const projectRoutes = require('./routes/projects');
- app.use('/api/projects', projectRoutes);
- const templateRoutes = require('./routes/templates');
- app.use('/api/templates', templateRoutes);
- const uploadRoutes = require('./routes/upload');
- app.use('/api/upload', uploadRoutes);
+const authRoutes = require('./routes/auth');
+app.use('/api/auth', authRoutes);
+
+const { protect } = require('./middleware/authMiddleware');
+const projectRoutes = require('./routes/projects');
+app.use('/api/projects', protect, projectRoutes);
+const templateRoutes = require('./routes/templates');
+app.use('/api/templates', templateRoutes);
+const uploadRoutes = require('./routes/upload');
+app.use('/api/upload', protect, uploadRoutes);
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);

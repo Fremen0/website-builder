@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { useAuth } from '../../context/AuthContext';
 import { useDrop } from 'react-dnd';
 import axios from 'axios';
 
@@ -26,6 +27,89 @@ const FONT_FAMILIES = [
 ];
 
 
+
+// ===== UserMenu Sub-component =====
+const UserMenu = () => {
+    const { user, logout } = useAuth();
+    const [open, setOpen] = React.useState(false);
+
+    if (!user) return null;
+
+    const initials = user.name
+        ? user.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+        : '??';
+
+    return (
+        <div style={{ position: 'relative' }}>
+            <button
+                id="user-menu-btn"
+                title={user.name}
+                onClick={() => setOpen(o => !o)}
+                style={{
+                    display: 'flex', alignItems: 'center', gap: '8px',
+                    background: 'rgba(99,102,241,0.12)', border: '1px solid rgba(99,102,241,0.3)',
+                    borderRadius: '8px', padding: '6px 12px', cursor: 'pointer',
+                    color: '#f8fafc', fontSize: '0.85rem', fontWeight: '500',
+                    transition: 'background 0.2s'
+                }}
+            >
+                <span style={{
+                    width: '28px', height: '28px', borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '0.75rem', fontWeight: '700', color: '#fff', flexShrink: 0
+                }}>{initials}</span>
+                <span style={{ maxWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.name}</span>
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5"
+                    style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s', opacity: 0.7 }}>
+                    <polyline points="6 9 12 15 18 9" />
+                </svg>
+            </button>
+
+            {open && (
+                <>
+                    {/* Backdrop */}
+                    <div onClick={() => setOpen(false)}
+                        style={{ position: 'fixed', inset: 0, zIndex: 999 }} />
+                    {/* Dropdown */}
+                    <div style={{
+                        position: 'absolute', top: 'calc(100% + 8px)', right: 0,
+                        background: '#1e293b', border: '1px solid rgba(99,102,241,0.2)',
+                        borderRadius: '12px', padding: '8px', minWidth: '180px',
+                        boxShadow: '0 10px 30px rgba(0,0,0,0.4)', zIndex: 1000,
+                        animation: 'menuIn 0.15s ease'
+                    }}>
+                        <style>{`@keyframes menuIn { from { opacity:0; transform:translateY(-6px) } to { opacity:1; transform:translateY(0) } }`}</style>
+                        <div style={{ padding: '8px 12px 10px', borderBottom: '1px solid rgba(255,255,255,0.06)', marginBottom: '6px' }}>
+                            <div style={{ fontSize: '0.88rem', fontWeight: '600', color: '#f8fafc' }}>{user.name}</div>
+                            <div style={{ fontSize: '0.78rem', color: '#64748b', marginTop: '2px' }}>{user.email}</div>
+                        </div>
+                        <button
+                            id="logout-btn"
+                            onClick={() => { logout(); setOpen(false); }}
+                            style={{
+                                display: 'flex', alignItems: 'center', gap: '8px', width: '100%',
+                                padding: '8px 12px', background: 'transparent', border: 'none',
+                                borderRadius: '8px', cursor: 'pointer', color: '#fca5a5',
+                                fontSize: '0.87rem', fontWeight: '500', transition: 'background 0.15s'
+                            }}
+                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(239,68,68,0.1)'}
+                            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                        >
+                            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                                <polyline points="16 17 21 12 16 7"/>
+                                <line x1="21" y1="12" x2="9" y2="12"/>
+                            </svg>
+                            Sign Out
+                        </button>
+                    </div>
+                </>
+            )}
+        </div>
+    );
+};
+// ==================================
 
 const Editor = () => {
     // State to store page components (will be connected to Backend later)
@@ -446,11 +530,13 @@ const Editor = () => {
                 break;
         }
 
+        // Ensure absolute positioning for all new dropped elements
         defaultStyle = {
             ...defaultStyle,
             position: 'absolute',
             left: `${x}px`,
-            top: `${y}px`
+            top: `${y}px`,
+            zIndex: 1
         };
 
         const responsiveStyles = {
@@ -700,7 +786,6 @@ const Editor = () => {
 
     const loadTemplate = (template) => {
         if (!template) {
-            // Start from blank
             setShowGallery(false);
             return;
         }
@@ -710,19 +795,27 @@ const Editor = () => {
             }
         }
         saveHistory();
-        // Deep-copy and normalize positioning so components stack like a real page
-        const normalized = JSON.parse(JSON.stringify(template.components)).map((comp, idx) => ({
-            ...comp,
-            id: Date.now() + idx, // ensure unique IDs
-            style: {
-                ...comp.style,
-                position: comp.style?.position || 'relative',
-                margin: comp.style?.margin || '0 auto',
-            },
-            responsiveStyles: comp.responsiveStyles || { tablet: {}, mobile: {} },
-            states: comp.states || { hover: {}, active: {} },
-            link: comp.link || '',
-        }));
+        
+        // Hybrid Logic: Preserve 'absolute' if coordinates exist, otherwise allow 'relative' for sections
+        const normalized = JSON.parse(JSON.stringify(template.components)).map((comp, idx) => {
+            const hasCoords = comp.style?.left !== undefined && comp.style?.top !== undefined;
+            const isSection = comp.type === 'section';
+
+            return {
+                ...comp,
+                id: Date.now() + idx,
+                style: {
+                    ...comp.style,
+                    // If it has coords, it's a Wix-style absolute element. 
+                    // If not (like pre-built sections), it's a Webflow-style relative element.
+                    position: comp.style?.position || (hasCoords ? 'absolute' : 'relative'),
+                    margin: comp.style?.margin || (hasCoords ? '0' : '0 auto'),
+                },
+                responsiveStyles: comp.responsiveStyles || { tablet: {}, mobile: {} },
+                states: comp.states || { hover: {}, active: {} },
+                link: comp.link || '',
+            };
+        });
         setComponents(normalized);
         setShowGallery(false);
     };
@@ -774,8 +867,13 @@ const Editor = () => {
         const generateComponentHTML = (comp, idx) => {
             const id = `el-${idx}`;
 
-            // Base styles
-            stylesBlock += `#${id} { ${toCss({ ...comp.style, position: 'absolute' })} }\n`;
+            // Hybrid Export: Respect the component's position (absolute or relative)
+            const exportStyle = { ...comp.style };
+            if (!exportStyle.position) {
+                exportStyle.position = (comp.style?.left !== undefined && comp.style?.top !== undefined) ? 'absolute' : 'relative';
+            }
+
+            stylesBlock += `#${id} { ${toCss(exportStyle)} }\n`;
 
             // States
             if (comp.states?.hover) stylesBlock += `#${id}:hover { ${toCss(comp.states.hover)} }\n`;
@@ -971,8 +1069,8 @@ const Editor = () => {
     return (
         <div className={styles['editor-container']}>
             <div className={styles['editor-header']}>
-                <h3>Website Builder</h3>
-                <div style={{ display: 'flex', gap: '10px' }}>
+                <h3>TWB — Template Website Builder</h3>
+                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                     {!previewMode && (
                         <>
                             <button onClick={handleSaveAsTemplate} className={`${styles.btn} ${styles['btn-success']}`}>Save as Template</button>
@@ -990,12 +1088,16 @@ const Editor = () => {
                         <button onClick={() => setViewMode('mobile')} className={viewMode === 'mobile' ? styles.active : ''} title="Mobile View"><i className="fas fa-mobile-alt"></i></button>
                     </div>
                 </div>
-                <button
-                    onClick={() => setPreviewMode(!previewMode)}
-                    className={`${styles.btn} ${previewMode ? styles['btn-primary'] : styles['btn-success']}`}
-                >
-                    {previewMode ? 'Edit Mode' : 'Preview Mode'}
-                </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <button
+                        onClick={() => setPreviewMode(!previewMode)}
+                        className={`${styles.btn} ${previewMode ? styles['btn-primary'] : styles['btn-success']}`}
+                    >
+                        {previewMode ? 'Edit Mode' : 'Preview Mode'}
+                    </button>
+                    {/* User info + Logout */}
+                    <UserMenu />
+                </div>
             </div>
 
             <div className={`${styles['editor-layout']} ${previewMode ? styles.center : ''}`}>
@@ -1084,9 +1186,19 @@ const Editor = () => {
                                                                         comp.type === 'div' ? 'fas fa-box' :
                                                                             comp.type === 'divider' ? 'fas fa-minus' : 'fas fa-font'
                                             } style={{ marginRight: '8px', width: '15px', color: 'var(--primary-color)', opacity: 0.8 }}></i>
-                                            <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1 }}>
+                                            <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1, marginRight: '8px' }}>
                                                 {comp.content || comp.type}
                                             </span>
+                                            
+                                            {/* Position Mode Indicator */}
+                                            <div style={{ marginRight: '8px', opacity: 0.6 }}>
+                                                {comp.style?.position === 'absolute' ? (
+                                                    <i className="fas fa-thumbtack" style={{ fontSize: '10px', color: '#818cf8' }} title="Pinned (Absolute)"></i>
+                                                ) : (
+                                                    <i className="fas fa-stream" style={{ fontSize: '10px', color: '#10b981' }} title="Flow (Relative)"></i>
+                                                )}
+                                            </div>
+
                                             <div style={{ display: 'flex', gap: '4px', opacity: selectedId === comp.id ? 1 : 0.4 }}>
                                                 <i className="fas fa-chevron-up" onClick={(e) => { e.stopPropagation(); reorderComponent(comp.id, 'up'); }} style={{ fontSize: '10px', cursor: 'pointer' }} title="Bring Forward"></i>
                                                 <i className="fas fa-chevron-down" onClick={(e) => { e.stopPropagation(); reorderComponent(comp.id, 'down'); }} style={{ fontSize: '10px', cursor: 'pointer' }} title="Send Backward"></i>
@@ -1415,6 +1527,52 @@ const Editor = () => {
                                                     </div>
                                                 </div>
                                             </div>
+                                            <div className={styles['form-group']}>
+                                                <label className={styles['form-label']}>Position Mode</label>
+                                                <div className={styles['button-group']}>
+                                                    <button 
+                                                        onClick={() => updateComponentStyle(selectedComponent.id, 'position', 'absolute')} 
+                                                        className={selectedComponent.style?.position === 'absolute' ? styles.active : ''}
+                                                    >
+                                                        Absolute
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => updateComponentStyle(selectedComponent.id, 'position', 'relative')} 
+                                                        className={selectedComponent.style?.position === 'relative' ? styles.active : ''}
+                                                    >
+                                                        Relative
+                                                    </button>
+                                                </div>
+                                                <p style={{ fontSize: '0.7rem', color: '#94a3b8', marginTop: '5px' }}>
+                                                    {selectedComponent.style?.position === 'absolute' 
+                                                        ? 'Free dragging enabled (Wix Style)' 
+                                                        : 'Auto-stacking enabled (Webflow Style)'}
+                                                </p>
+                                                
+                                                {selectedComponent.style?.position === 'absolute' && (
+                                                    <div className={styles.flex} style={{ gap: '10px', marginTop: '12px' }}>
+                                                        <div className={styles['form-group']} style={{ flex: 1, marginBottom: 0 }}>
+                                                            <label className={styles['form-label']} style={{ fontSize: '10px' }}>X (Left)</label>
+                                                            <input 
+                                                                type="number" 
+                                                                value={parseInt(selectedComponent.style?.left) || 0} 
+                                                                onChange={(e) => updateComponentStyle(selectedComponent.id, 'left', `${e.target.value}px`)} 
+                                                                className={styles['form-control']} 
+                                                            />
+                                                        </div>
+                                                        <div className={styles['form-group']} style={{ flex: 1, marginBottom: 0 }}>
+                                                            <label className={styles['form-label']} style={{ fontSize: '10px' }}>Y (Top)</label>
+                                                            <input 
+                                                                type="number" 
+                                                                value={parseInt(selectedComponent.style?.top) || 0} 
+                                                                onChange={(e) => updateComponentStyle(selectedComponent.id, 'top', `${e.target.value}px`)} 
+                                                                className={styles['form-control']} 
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+
                                             <label className={styles['form-label']}>Quick Align</label>
                                             <div className={`${styles.flex} ${styles['justify-between']} ${styles['mb-5']}`} style={{ gap: '4px' }}>
                                                 <button onClick={() => alignComponent('left')} className={`${styles.btn} ${styles['btn-secondary']} ${styles['btn-sm']}`} style={{ flex: 1 }} title="Left"><i className="fas fa-arrow-left"></i></button>

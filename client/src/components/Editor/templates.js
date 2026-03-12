@@ -71,7 +71,7 @@ export const PREBUILT_SECTIONS = [
         icon: 'fas fa-window-minimize',
         components: [
             { type: 'divider', content: '', style: { width: '100%', height: '1px', backgroundColor: '#e2e8f0', margin: '40px 0' } },
-            { type: 'text', content: '© 2024 Website Builder. All rights reserved.', style: { textAlign: 'center', padding: '20px', color: '#94a3b8', fontSize: '14px' } }
+            { type: 'text', content: '© 2024 TWB — Template Website Builder. All rights reserved.', style: { textAlign: 'center', padding: '20px', color: '#94a3b8', fontSize: '14px' } }
         ]
     },
     {
