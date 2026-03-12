@@ -1,46 +1,43 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto:wght@400;500;700&display=swap');
 
 :root {
-  /* Color Palette - Minimalist Neutral Theme */
-  --primary-color: #6366f1;
-  /* Indigo 500 */
+  /* Color Palette - Liquid Glass Light */
+  --primary-color: #6366f1; /* Vibrant Indigo */
   --primary-hover: #4f46e5;
-  --secondary-color: #10b981;
+  --primary-glass: rgba(99, 102, 241, 0.15); /* Tinted transparent */
+  
+  --secondary-color: #ec4899; /* Vibrant Pink */
   --danger-color: #ef4444;
+  --success-color: #10b981;
   --warning-color: #f59e0b;
 
-  /* Neural / Dark Shades - Neutral Slate */
-  --dark-bg: #1e293b;
-  /* Slate 800 */
-  --darker-bg: #0f172a;
-  /* Slate 900 */
-  --sidebar-bg: #1e293b;
-  /* Neutral dark sidebar */
-  --header-bg: #0f172a;
-  /* Neutral dark header */
-
-  /* Neural / Light Shades */
-  --light-bg: #f1f5f9;
-  /* Slate 100 */
+  /* Neutrals / Glass Backgrounds */
+  --dark-bg: rgba(255, 255, 255, 0.7); /* Translucent White for Panels */
+  --darker-bg: rgba(255, 255, 255, 0.4); /* Base gradient background fallback */
+  --sidebar-bg: rgba(255, 255, 255, 0.75); /* Highly translucent Sidebar */
+  --header-bg: rgba(255, 255, 255, 0.85); /* Slightly frosty header */
+  
+  --glass-border: rgba(255, 255, 255, 0.5); /* White highlight for glass edges */
+  --light-bg: #f8fafc; /* Canvas background (Slate 50) */
   --white: #ffffff;
-  --border-color: #e2e8f0;
-  /* Slate 200 */
+  --border-color: rgba(255, 255, 255, 0.6);
 
-  /* Text */
-  --text-main: #1e293b;
-  /* Slate 800 */
-  --text-muted: #64748b;
-  /* Slate 500 */
-  --text-light: #f8fafc;
-  /* Slate 50 */
+  /* Shadows - Diffuse & Multi-layered for Liquid feel */
+  --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.03), inset 0 1px 1px rgba(255, 255, 255, 1);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.9);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.08), inset 0 1px 1px rgba(255, 255, 255, 1);
 
-  /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  /* Text - Dark for high contrast on light backgrounds */
+  --text-main: #0f172a; /* Slate 900 */
+  --text-muted: #64748b; /* Slate 500 */
+  --text-light: #334155; /* Slate 700 */
+
+  /* Glass Effects */
+  --backdrop-blur: blur(16px);
+  --backdrop-saturate: saturate(180%);
 
   /* Animation */
-  --transition-speed: 0.2s;
+  --transition-speed: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 body {

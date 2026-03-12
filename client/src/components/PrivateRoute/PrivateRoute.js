@@ -9,24 +9,24 @@ const PrivateRoute = ({ children }) => {
     if (loading) {
         return (
             <div style={{
-                minHeight: '100vh',
+                height: '100vh',
                 display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
                 flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+                backgroundColor: '#f8fafc',
                 gap: '16px'
             }}>
                 <div style={{
-                    width: '44px',
-                    height: '44px',
-                    border: '3px solid rgba(99,102,241,0.2)',
-                    borderTop: '3px solid #6366f1',
+                    width: '32px',
+                    height: '32px',
+                    border: '3px solid rgba(99, 102, 241, 0.2)',
+                    borderTopColor: '#6366f1',
                     borderRadius: '50%',
-                    animation: 'spin 0.7s linear infinite'
+                    animation: 'spin 1s ease-in-out infinite'
                 }} />
                 <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-                <p style={{ color: '#475569', fontFamily: 'Inter, sans-serif', margin: 0, fontSize: '0.9rem' }}>
+                <p style={{ color: '#64748b', fontFamily: 'Inter, sans-serif', margin: 0, fontSize: '0.9rem', fontWeight: 500 }}>
                     Loading...
                 </p>
             </div>

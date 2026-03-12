@@ -6,7 +6,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "db:start": "mongod --dbpath ../data --port 27018 --logpath mongod.log --fork",
+    "db:stop": "mongod --dbpath ../data --port 27018 --shutdown"
   },
   "keywords": [],
   "author": "",
