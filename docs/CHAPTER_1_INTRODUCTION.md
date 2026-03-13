@@ -24,9 +24,14 @@ The project has four goals:
 4. Creating code that is easy to work with: when the user is finished building their website, the system converts the design into code that is easy to read and use, making it simple to publish the website online and make changes later.
 
 ## 1.4 Project Organization
-This research is organized into four main chapters as follows:
+This research is organized into four main chapters, designed to guide the reader from the initial concept and technical requirements to the final implementation and future possibilities:
 
--   **Chapter One**: Provides the introduction, problem statement, project aims, and an overview of the document's structure.
--   **Chapter Two**: Discusses the technical background, reviewing the technologies used (React, Node.js, MongoDB) and existing similar systems in the market.
--   **Chapter Three**: Focuses on the system's design and implementation, detailing the architecture, database schema, and core development phases.
--   **Chapter Four**: Presents the final conclusions, evaluates the results against the initial aims, and discusses potential future improvements.
+- **Chapter One (Introduction):** Sets the stage by outlining the problem statement, primary research objectives, and the overall scope of the TWB project.
+
+- **Chapter Two (Background):** Provides a comprehensive review of the technical foundation, including the core languages (JavaScript, HTML5, CSS3), the MERN stack (MongoDB, Express, React, Node), development tools, and the detailed database schema.
+
+- **Chapter Three (Methodology and Implementation):** Detailing the system’s architecture, the design of the Hybrid Positioning Engine, the internal logic of the Editor and Preview modes, and the core algorithms like Grid Snapping and JWT authentication.
+
+- **Chapter Four (Conclusion and Future Work):** Evaluates the project results against the initial aims, summarizes key achievements, and proposes potential features for future versions.
+
+

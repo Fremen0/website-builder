@@ -31,8 +31,7 @@ The research will analyze how TWB fits into the current ecosystem of no-code/low
 3. **Live State Previewing**: The ability to edit and preview pseudo-classes (`Hover`, `Active`, `Focus`) directly on the canvas.
 
 ## 5. Proposed Document Structure
-- [ ] **Chapter 1: Introduction** – Project background, problem statement, and scope.
-- [ ] **Chapter 2: Literature Review** – Analysis of current web-building technologies and market trends.
-- [ ] **Chapter 3: System Design & Architecture** – Technical breakdowns of the engine and data flow.
-- [ ] **Chapter 4: Implementation & Evaluation** – Showcasing the build process and testing results.
-- [ ] **Chapter 5: Conclusion & Future Scope** – Summary of achievements and potential improvements.
+- [x] **Chapter 1: Introduction** – Project background, problem statement, and scope.
+- [x] **Chapter 2: Background** – Analysis of current web-building technologies and market trends.
+- [x] **Chapter 3: Design and Implementation** – Technical breakdowns of the engine and data flow.
+- [x] **Chapter 4: Conclusion and Future Work** – Summary of achievements and potential improvements.
