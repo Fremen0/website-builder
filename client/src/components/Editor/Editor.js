@@ -115,7 +115,7 @@ const UserMenu = () => {
 };
 // ==================================
 
-const Editor = () => {
+const Editor = ({ onNavigateAbout }) => {
     // State to store page components (will be connected to Backend later)
     // State to store page components (will be connected to Backend later)
     const [pages, setPages] = useState([{
@@ -203,6 +203,11 @@ const Editor = () => {
     const [showSaveModal, setShowSaveModal] = useState(false);
     const [tempTemplateName, setTempTemplateName] = useState('');
     const [activeState, setActiveState] = useState('normal'); // 'normal', 'hover', 'active'
+    const [showAddPageModal, setShowAddPageModal] = useState(false);
+    const [newPageName, setNewPageName] = useState('');
+    const [editingPage, setEditingPage] = useState(null);   // { id, name }
+    const [editPageName, setEditPageName] = useState('');
+    const [deletingPage, setDeletingPage] = useState(null); // { id, name }
 
     const toggleCategory = (cat) => {
         setOpenCategories(prev => ({ ...prev, [cat]: !prev[cat] }));
@@ -214,7 +219,7 @@ const Editor = () => {
 
     // Page Management Functions
     const addPage = () => {
-        const name = prompt('Enter page name (e.g., About):');
+        const name = newPageName.trim();
         if (!name) return;
         const id = name.toLowerCase().replace(/\s+/g, '-');
 
@@ -236,20 +241,30 @@ const Editor = () => {
             }
         }]);
         setActivePageId(id);
+        setNewPageName('');
+        setShowAddPageModal(false);
     };
 
-    const deletePage = (e, id) => {
-        e.stopPropagation();
-        if (pages.length <= 1) {
-            alert('Cannot delete the last page.');
-            return;
-        }
-        if (!window.confirm(`Are you sure you want to delete page "${id}"?`)) return;
-
+    const deletePage = (id) => {
         setPages(prev => prev.filter(p => p.id !== id));
         if (activePageId === id) {
-            setActivePageId(pages[0].id === id ? pages[1].id : pages[0].id);
+            setActivePageId(pages.find(p => p.id !== id)?.id || pages[0].id);
         }
+        setDeletingPage(null);
+    };
+
+    const renamePage = () => {
+        const name = editPageName.trim();
+        if (!name || !editingPage) return;
+        const newId = name.toLowerCase().replace(/\s+/g, '-');
+        setPages(prev => prev.map(p =>
+            p.id === editingPage.id
+                ? { ...p, name, id: newId, path: `/${newId === 'home' ? '' : newId}` }
+                : p
+        ));
+        if (activePageId === editingPage.id) setActivePageId(newId);
+        setEditingPage(null);
+        setEditPageName('');
     };
 
     const switchPage = (id) => {
@@ -1198,6 +1213,39 @@ const Editor = () => {
                             <i className="fas fa-sliders-h"></i>
                         </button>
                     )}
+                    {/* About Developer Button */}
+                    {onNavigateAbout && (
+                        <button
+                            id="about-dev-btn"
+                            onClick={onNavigateAbout}
+                            title="About the Developer"
+                            style={{
+                                display: 'flex', alignItems: 'center', gap: '7px',
+                                background: 'linear-gradient(135deg, rgba(99,102,241,0.12), rgba(236,72,153,0.12))',
+                                border: '1px solid rgba(99, 102, 241, 0.25)',
+                                borderRadius: '12px', padding: '8px 14px', cursor: 'pointer',
+                                color: '#6366f1', fontSize: '0.85rem', fontWeight: '600',
+                                transition: 'all 0.25s', fontFamily: 'inherit'
+                            }}
+                            onMouseEnter={e => {
+                                e.currentTarget.style.background = 'linear-gradient(135deg, #6366f1, #ec4899)';
+                                e.currentTarget.style.color = 'white';
+                                e.currentTarget.style.borderColor = 'transparent';
+                                e.currentTarget.style.transform = 'translateY(-1px)';
+                                e.currentTarget.style.boxShadow = '0 6px 16px rgba(99,102,241,0.3)';
+                            }}
+                            onMouseLeave={e => {
+                                e.currentTarget.style.background = 'linear-gradient(135deg, rgba(99,102,241,0.12), rgba(236,72,153,0.12))';
+                                e.currentTarget.style.color = '#6366f1';
+                                e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.25)';
+                                e.currentTarget.style.transform = 'translateY(0)';
+                                e.currentTarget.style.boxShadow = 'none';
+                            }}
+                        >
+                            <i className="fas fa-user-circle" />
+                            About
+                        </button>
+                    )}
                     {/* User info + Logout */}
                     <UserMenu />
                 </div>
@@ -1283,28 +1331,45 @@ const Editor = () => {
                             <div className={`${styles['prop-header']} ${openToolCategories.pages ? styles.open : ''}`} onClick={() => toggleToolCategory('pages')} style={{ paddingLeft: 0, paddingRight: 0 }}>
                                 <span style={{ fontSize: '0.85rem', color: 'var(--text-main)' }}><i className="fas fa-file-alt" style={{ marginRight: '6px' }}></i> Pages</span>
                                 <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <i className="fas fa-plus" onClick={(e) => { e.stopPropagation(); addPage(); }} style={{ fontSize: '12px', padding: '4px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', borderRadius: '4px', cursor: 'pointer' }}></i>
+                                    <button
+                                        onClick={(e) => { e.stopPropagation(); setNewPageName(''); setShowAddPageModal(true); }}
+                                        title="Add Page"
+                                        style={{ fontSize: '11px', padding: '3px 7px', background: 'rgba(16, 185, 129, 0.12)', color: '#10b981', borderRadius: '4px', cursor: 'pointer', border: 'none', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '3px' }}
+                                    >
+                                        <i className="fas fa-plus" />
+                                    </button>
                                     <i className="fas fa-chevron-down"></i>
                                 </div>
                             </div>
                             {openToolCategories.pages && (
                                 <div className={styles['pages-list']} style={{ paddingTop: '10px' }}>
-                                    {pages.map(page => (
+                                {pages.map(page => (
                                         <div
                                             key={page.id}
                                             onClick={() => switchPage(page.id)}
                                             className={`${styles['page-item']} ${activePageId === page.id ? styles.active : ''}`}
                                         >
-                                            <span>{page.name}</span>
-                                            {pages.length > 1 && (
-                                                <span
-                                                    onClick={(e) => deletePage(e, page.id)}
-                                                    className={styles['delete-icon']}
-                                                    title="Delete Page"
+                                            <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{page.name}</span>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
+                                                {/* Edit button */}
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); setEditingPage(page); setEditPageName(page.name); }}
+                                                    title="Rename Page"
+                                                    style={{ background: 'rgba(99,102,241,0.12)', border: 'none', color: '#6366f1', borderRadius: '4px', width: '22px', height: '22px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px' }}
                                                 >
-                                                    ✕
-                                                </span>
-                                            )}
+                                                    <i className="fas fa-pencil-alt" />
+                                                </button>
+                                                {/* Delete button — hidden for last page */}
+                                                {pages.length > 1 && (
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); setDeletingPage(page); }}
+                                                        title="Delete Page"
+                                                        style={{ background: 'rgba(239,68,68,0.1)', border: 'none', color: '#ef4444', borderRadius: '4px', width: '22px', height: '22px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px' }}
+                                                    >
+                                                        <i className="fas fa-trash-alt" />
+                                                    </button>
+                                                )}
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
@@ -1976,6 +2041,120 @@ const Editor = () => {
                             </button>
                             <button
                                 onClick={() => setShowSaveModal(false)}
+                                className={`${styles.btn} ${styles['btn-secondary']} ${styles['w-100']}`}
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Add Page Modal */}
+            {showAddPageModal && (
+                <div className={styles['modal-overlay']} onClick={() => setShowAddPageModal(false)}>
+                    <div className={styles['modal-content']} onClick={e => e.stopPropagation()}>
+                        <h3 style={{ marginBottom: '16px', fontSize: '1rem', color: 'var(--text-main)' }}>
+                            <i className="fas fa-file-alt" style={{ marginRight: '8px', color: '#10b981' }} />
+                            Add New Page
+                        </h3>
+                        <div className={styles['form-group']}>
+                            <label className={styles['form-label']}>Page Name</label>
+                            <input
+                                type="text"
+                                value={newPageName}
+                                onChange={(e) => setNewPageName(e.target.value)}
+                                onKeyDown={(e) => { if (e.key === 'Enter') addPage(); if (e.key === 'Escape') setShowAddPageModal(false); }}
+                                placeholder="e.g. About, Contact, Portfolio"
+                                className={styles['form-control']}
+                                autoFocus
+                            />
+                        </div>
+                        <div className={`${styles.flex} ${styles['gap-10']} ${styles['mt-20']}`}>
+                            <button
+                                onClick={addPage}
+                                disabled={!newPageName.trim()}
+                                className={`${styles.btn} ${styles['btn-primary']} ${styles['w-100']}`}
+                                style={{ background: !newPageName.trim() ? undefined : 'linear-gradient(135deg, #10b981, #059669)', opacity: newPageName.trim() ? 1 : 0.5 }}
+                            >
+                                <i className="fas fa-plus" style={{ marginRight: '6px' }} />
+                                Create Page
+                            </button>
+                            <button
+                                onClick={() => setShowAddPageModal(false)}
+                                className={`${styles.btn} ${styles['btn-secondary']} ${styles['w-100']}`}
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Rename Page Modal */}
+            {editingPage && (
+                <div className={styles['modal-overlay']} onClick={() => setEditingPage(null)}>
+                    <div className={styles['modal-content']} onClick={e => e.stopPropagation()}>
+                        <h3 style={{ marginBottom: '16px', fontSize: '1rem', color: 'var(--text-main)' }}>
+                            <i className="fas fa-pencil-alt" style={{ marginRight: '8px', color: '#6366f1' }} />
+                            Rename Page
+                        </h3>
+                        <div className={styles['form-group']}>
+                            <label className={styles['form-label']}>New Page Name</label>
+                            <input
+                                type="text"
+                                value={editPageName}
+                                onChange={(e) => setEditPageName(e.target.value)}
+                                onKeyDown={(e) => { if (e.key === 'Enter') renamePage(); if (e.key === 'Escape') setEditingPage(null); }}
+                                className={styles['form-control']}
+                                autoFocus
+                            />
+                        </div>
+                        <div className={`${styles.flex} ${styles['gap-10']} ${styles['mt-20']}`}>
+                            <button
+                                onClick={renamePage}
+                                disabled={!editPageName.trim()}
+                                className={`${styles.btn} ${styles['btn-primary']} ${styles['w-100']}`}
+                                style={{ opacity: editPageName.trim() ? 1 : 0.5 }}
+                            >
+                                <i className="fas fa-check" style={{ marginRight: '6px' }} />
+                                Save Name
+                            </button>
+                            <button
+                                onClick={() => setEditingPage(null)}
+                                className={`${styles.btn} ${styles['btn-secondary']} ${styles['w-100']}`}
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Page Confirmation Modal */}
+            {deletingPage && (
+                <div className={styles['modal-overlay']} onClick={() => setDeletingPage(null)}>
+                    <div className={styles['modal-content']} onClick={e => e.stopPropagation()} style={{ maxWidth: '380px' }}>
+                        <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+                            <div style={{ width: '48px', height: '48px', background: 'rgba(239,68,68,0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px', fontSize: '20px', color: '#ef4444' }}>
+                                <i className="fas fa-trash-alt" />
+                            </div>
+                            <h3 style={{ fontSize: '1rem', color: 'var(--text-main)', marginBottom: '6px' }}>Delete Page</h3>
+                            <p style={{ fontSize: '0.85rem', color: '#64748b', margin: 0 }}>
+                                Are you sure you want to delete <strong>"{deletingPage.name}"</strong>? This cannot be undone.
+                            </p>
+                        </div>
+                        <div className={`${styles.flex} ${styles['gap-10']} ${styles['mt-20']}`}>
+                            <button
+                                onClick={() => deletePage(deletingPage.id)}
+                                className={`${styles.btn} ${styles['w-100']}`}
+                                style={{ background: 'linear-gradient(135deg, #ef4444, #dc2626)', color: 'white', border: 'none' }}
+                            >
+                                <i className="fas fa-trash-alt" style={{ marginRight: '6px' }} />
+                                Delete
+                            </button>
+                            <button
+                                onClick={() => setDeletingPage(null)}
                                 className={`${styles.btn} ${styles['btn-secondary']} ${styles['w-100']}`}
                             >
                                 Cancel

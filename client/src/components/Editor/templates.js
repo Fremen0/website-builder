@@ -7,7 +7,7 @@ export const INITIAL_TEMPLATES = [
             { id: 2, type: 'heading', content: 'Design with Freedom', style: { position: 'absolute', left: '100px', top: '150px', width: '500px', fontSize: '56px', fontWeight: '800', color: '#111827', lineHeight: '1.1' } },
             { id: 3, type: 'text', content: 'Our new template engine allows absolute positioning, turning your canvas into an infinite playground.', style: { position: 'absolute', left: '100px', top: '300px', width: '450px', fontSize: '20px', color: '#4b5563', lineHeight: '1.6' } },
             { id: 4, type: 'button', content: 'Start Building', style: { position: 'absolute', left: '100px', top: '400px', width: '180px', height: '50px', backgroundColor: '#6366f1', color: '#ffffff', borderRadius: '30px', border: 'none', fontWeight: '600', fontSize: '16px', boxShadow: '0 4px 6px rgba(99, 102, 241, 0.2)' } },
-            { id: 5, type: 'image', content: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80', style: { position: 'absolute', left: '600px', top: '120px', width: '500px', height: '360px', borderRadius: '16px', objectFit: 'cover', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' } }
+            { id: 5, type: 'image', content: 'https://images.unsplash.com/photo-1551650975-87deedd944c3?auto=format&fit=crop&w=800&q=80', style: { position: 'absolute', left: '600px', top: '120px', width: '500px', height: '360px', borderRadius: '16px', objectFit: 'cover', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' } }
         ]
     },
     {
@@ -16,8 +16,8 @@ export const INITIAL_TEMPLATES = [
         components: [
             { id: 30, type: 'text', content: '', style: { position: 'absolute', left: '0px', top: '0px', width: '1200px', height: '800px', backgroundColor: '#fafafa', zIndex: '-2' } },
             { id: 31, type: 'heading', content: 'Selected Works', style: { position: 'absolute', left: '60px', top: '60px', width: '400px', fontSize: '36px', fontWeight: '800', color: '#111827' } },
-            { id: 32, type: 'image', content: 'https://images.unsplash.com/photo-1542641728-6ca359b085f4?auto=format&fit=crop&w=400&q=80', style: { position: 'absolute', left: '60px', top: '150px', width: '500px', height: '350px', borderRadius: '12px', objectFit: 'cover', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' } },
-            { id: 33, type: 'image', content: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=400&q=80', style: { position: 'absolute', left: '600px', top: '150px', width: '500px', height: '350px', borderRadius: '12px', objectFit: 'cover', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' } },
+            { id: 32, type: 'image', content: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=400&q=80', style: { position: 'absolute', left: '60px', top: '150px', width: '500px', height: '350px', borderRadius: '12px', objectFit: 'cover', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' } },
+            { id: 33, type: 'image', content: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=400&q=80', style: { position: 'absolute', left: '600px', top: '150px', width: '500px', height: '350px', borderRadius: '12px', objectFit: 'cover', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' } },
             { id: 34, type: 'text', content: 'Project Alpha', style: { position: 'absolute', left: '60px', top: '530px', width: '300px', fontSize: '20px', fontWeight: '700', color: '#111827' } },
             { id: 35, type: 'text', content: 'Project Beta', style: { position: 'absolute', left: '600px', top: '530px', width: '300px', fontSize: '20px', fontWeight: '700', color: '#111827' } }
         ]

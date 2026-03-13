@@ -10,6 +10,7 @@ export const TEMPLATE_CATEGORIES = [
     { id: 'store', label: 'Store', icon: 'fas fa-shopping-bag' },
     { id: 'restaurant', label: 'Restaurant', icon: 'fas fa-utensils' },
     { id: 'landing', label: 'Landing Page', icon: 'fas fa-rocket' },
+    { id: 'blog', label: 'Blog', icon: 'fas fa-newspaper' },
 ];
 
 export const TEMPLATES = [
@@ -40,7 +41,7 @@ export const TEMPLATES = [
             { id: 5, type: 'button', content: 'View Our Work', style: { position: 'absolute', left: '40px', top: '590px', width: '200px', height: '56px', backgroundColor: '#a78bfa', color: '#0f0c29', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '16px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', boxShadow: '0 12px 24px rgba(167,139,250,0.3)' } },
             
             // Decorative Elements & Images
-            { id: 6, type: 'image', content: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=800&q=80', style: { position: 'absolute', left: '600px', top: '150px', width: '540px', height: '600px', borderRadius: '24px', objectFit: 'cover', boxShadow: '0 30px 60px rgba(0,0,0,0.6)' } },
+            { id: 6, type: 'image', content: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80', style: { position: 'absolute', left: '600px', top: '150px', width: '540px', height: '600px', borderRadius: '24px', objectFit: 'cover', boxShadow: '0 30px 60px rgba(0,0,0,0.6)' } },
             { id: 7, type: 'text', content: '', style: { position: 'absolute', left: '550px', top: '650px', width: '200px', height: '200px', borderRadius: '50%', background: 'linear-gradient(135deg, #a78bfa 0%, #302b63 100%)', filter: 'blur(60px)', opacity: '0.6', zIndex: '-1' } },
             
             // Stats Section
@@ -84,17 +85,17 @@ export const TEMPLATES = [
             { id: 26, type: 'text', content: '', style: { position: 'absolute', left: '65px', top: '450px', width: '60px', height: '4px', backgroundColor: '#6366f1', borderRadius: '2px' } },
 
             // Profile / Hero Image
-            { id: 27, type: 'image', content: 'https://images.unsplash.com/photo-1555421689-491a97ff2040?auto=format&fit=crop&w=800&q=80', style: { position: 'absolute', left: '650px', top: '120px', width: '450px', height: '550px', borderRadius: '16px', objectFit: 'cover', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.15)' } },
+            { id: 27, type: 'image', content: 'https://images.unsplash.com/photo-1558655146-d09347e92766?auto=format&fit=crop&w=800&q=80', style: { position: 'absolute', left: '650px', top: '120px', width: '450px', height: '550px', borderRadius: '16px', objectFit: 'cover', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.15)' } },
             
             // Selected Works Section
             { id: 28, type: 'heading', content: 'Selected Works', style: { position: 'absolute', left: '60px', top: '750px', width: '400px', fontSize: '36px', fontWeight: '800', color: '#111827' } },
             
             // Work 1
-            { id: 29, type: 'image', content: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=600&q=80', style: { position: 'absolute', left: '60px', top: '830px', width: '500px', height: '350px', borderRadius: '12px', objectFit: 'cover' } },
+            { id: 29, type: 'image', content: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=600&q=80', style: { position: 'absolute', left: '60px', top: '830px', width: '500px', height: '350px', borderRadius: '12px', objectFit: 'cover' } },
             { id: 30, type: 'text', content: 'E-Commerce Redesign', style: { position: 'absolute', left: '60px', top: '1200px', width: '300px', fontSize: '20px', fontWeight: '700', color: '#111827' } },
             
             // Work 2
-            { id: 31, type: 'image', content: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=600&q=80', style: { position: 'absolute', left: '600px', top: '830px', width: '500px', height: '350px', borderRadius: '12px', objectFit: 'cover' } },
+            { id: 31, type: 'image', content: 'https://images.unsplash.com/photo-1551650975-87deedd944c3?auto=format&fit=crop&w=600&q=80', style: { position: 'absolute', left: '600px', top: '830px', width: '500px', height: '350px', borderRadius: '12px', objectFit: 'cover' } },
             { id: 32, type: 'text', content: 'SaaS Dashboard', style: { position: 'absolute', left: '600px', top: '1200px', width: '300px', fontSize: '20px', fontWeight: '700', color: '#111827' } },
         ]
     },
@@ -123,7 +124,7 @@ export const TEMPLATES = [
             { id: 43, type: 'text', content: 'Search    Account    Cart(0)', style: { position: 'absolute', left: '900px', top: '80px', width: '250px', fontSize: '14px', color: '#334155', fontWeight: '600', letterSpacing: '1px' } },
 
             // Big Hero Full Width
-            { id: 44, type: 'image', content: 'https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?auto=format&fit=crop&w=1200&q=80', style: { position: 'absolute', left: '40px', top: '150px', width: '1120px', height: '550px', borderRadius: '0px', objectFit: 'cover' } },
+            { id: 44, type: 'image', content: 'https://images.unsplash.com/photo-1524634126442-357e0eac3c14?auto=format&fit=crop&w=1200&q=80', style: { position: 'absolute', left: '40px', top: '150px', width: '1120px', height: '550px', borderRadius: '0px', objectFit: 'cover' } },
             
             // Hero Overlay Box
             { id: 45, type: 'text', content: '', style: { position: 'absolute', left: '80px', top: '350px', width: '400px', height: '260px', backgroundColor: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(5px)' } },
@@ -134,15 +135,15 @@ export const TEMPLATES = [
             { id: 48, type: 'heading', content: 'Curated Categories', style: { position: 'absolute', left: '40px', top: '780px', width: '400px', fontSize: '32px', fontWeight: '800', color: '#0f172a' } },
             
             // Cat 1
-            { id: 49, type: 'image', content: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=400&q=80', style: { position: 'absolute', left: '40px', top: '850px', width: '350px', height: '450px', objectFit: 'cover' } },
+            { id: 49, type: 'image', content: 'https://images.unsplash.com/photo-1491553895911-0055eca6402d?auto=format&fit=crop&w=400&q=80', style: { position: 'absolute', left: '40px', top: '850px', width: '350px', height: '450px', objectFit: 'cover' } },
             { id: 50, type: 'text', content: 'Women\'s Apparel', style: { position: 'absolute', left: '40px', top: '1320px', width: '350px', fontSize: '18px', fontWeight: '700', color: '#0f172a', textAlign: 'center' } },
 
             // Cat 2
-            { id: 51, type: 'image', content: 'https://images.unsplash.com/photo-1490578474895-699bc4e3f44f?auto=format&fit=crop&w=400&q=80', style: { position: 'absolute', left: '425px', top: '850px', width: '350px', height: '450px', objectFit: 'cover' } },
+            { id: 51, type: 'image', content: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=400&q=80', style: { position: 'absolute', left: '425px', top: '850px', width: '350px', height: '450px', objectFit: 'cover' } },
             { id: 52, type: 'text', content: 'Essentials', style: { position: 'absolute', left: '425px', top: '1320px', width: '350px', fontSize: '18px', fontWeight: '700', color: '#0f172a', textAlign: 'center' } },
 
             // Cat 3
-            { id: 53, type: 'image', content: 'https://images.unsplash.com/photo-1511511450040-677116e4db3a?auto=format&fit=crop&w=400&q=80', style: { position: 'absolute', left: '810px', top: '850px', width: '350px', height: '450px', objectFit: 'cover' } },
+            { id: 53, type: 'image', content: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=400&q=80', style: { position: 'absolute', left: '810px', top: '850px', width: '350px', height: '450px', objectFit: 'cover' } },
             { id: 54, type: 'text', content: 'Footwear', style: { position: 'absolute', left: '810px', top: '1320px', width: '350px', fontSize: '18px', fontWeight: '700', color: '#0f172a', textAlign: 'center' } },
         ]
     },
@@ -179,10 +180,103 @@ export const TEMPLATES = [
             { id: 68, type: 'button', content: 'Book a Demo', style: { position: 'absolute', left: '620px', top: '480px', width: '200px', height: '54px', backgroundColor: '#ffffff', color: '#0f172a', borderRadius: '8px', fontWeight: '700', fontSize: '16px', border: '1px solid #cbd5e1' } },
 
             // Dashboard Image Mockup
-            { id: 69, type: 'image', content: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1200&q=80', style: { position: 'absolute', left: '100px', top: '600px', width: '1000px', height: '500px', borderRadius: '24px', objectFit: 'cover', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', border: '8px solid #ffffff' } },
+            { id: 69, type: 'image', content: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=1200&q=80', style: { position: 'absolute', left: '100px', top: '600px', width: '1000px', height: '500px', borderRadius: '24px', objectFit: 'cover', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', border: '8px solid #ffffff' } },
         ]
-    }
+    },
+
+    // ─────────────────── 5. Modern Blog ───────────────────
+    {
+        id: 'blog-magazine',
+        name: 'Modern Blog',
+        category: 'blog',
+        description: 'An editorial blog layout with featured hero post, trending sidebar, 3-column article grid, and newsletter box.',
+        tags: ['blog', 'magazine', 'editorial', 'articles'],
+        thumbnail: {
+            bg: 'linear-gradient(135deg, #ffffff, #f8fafc)',
+            accent: '#0f172a',
+            preview: [
+                { type: 'bar', color: '#0f172a', width: '100%', height: '10px', y: '0%' },
+                { type: 'bar', color: '#0f172a', width: '65%', height: '14px', y: '22%' },
+                { type: 'bar', color: '#94a3b8', width: '45%', height: '7px', y: '42%' },
+                { type: 'bar', color: '#6366f1', width: '30%', height: '7px', y: '55%' },
+            ]
+        },
+        components: [
+            // background
+            { id: 100, type: 'text', content: '', style: { position: 'absolute', left: '0px', top: '0px', width: '1200px', height: '2500px', backgroundColor: '#ffffff', zIndex: '-2' } },
+            // top bar
+            { id: 101, type: 'text', content: '', style: { position: 'absolute', left: '0px', top: '0px', width: '1200px', height: '3px', backgroundColor: '#0f172a' } },
+            // nav
+            { id: 102, type: 'heading', content: 'The Journal', style: { position: 'absolute', left: '460px', top: '22px', width: '280px', fontSize: '28px', fontWeight: '900', color: '#0f172a', letterSpacing: '-0.5px', textAlign: 'center' } },
+            { id: 103, type: 'text', content: 'Design   Tech   Culture   Travel   Opinion', style: { position: 'absolute', left: '270px', top: '68px', width: '660px', fontSize: '12px', color: '#64748b', fontWeight: '600', letterSpacing: '0.5px', textAlign: 'center' } },
+            { id: 104, type: 'text', content: '', style: { position: 'absolute', left: '0px', top: '96px', width: '1200px', height: '1px', backgroundColor: '#e2e8f0' } },
+            // issue strip
+            { id: 105, type: 'text', content: 'MARCH 2026  .  ISSUE 12', style: { position: 'absolute', left: '40px', top: '112px', width: '300px', fontSize: '10px', color: '#94a3b8', fontWeight: '700', letterSpacing: '2px' } },
+            // featured image
+            { id: 106, type: 'image', content: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80', style: { position: 'absolute', left: '40px', top: '142px', width: '720px', height: '440px', objectFit: 'cover', borderRadius: '4px' } },
+            { id: 107, type: 'text', content: 'FEATURED', style: { position: 'absolute', left: '40px', top: '149px', width: '92px', backgroundColor: '#0f172a', color: '#ffffff', fontSize: '10px', fontWeight: '800', letterSpacing: '2px', textAlign: 'center', padding: '5px 0' } },
+            // featured text
+            { id: 108, type: 'text', content: 'DESIGN', style: { position: 'absolute', left: '40px', top: '598px', width: '80px', fontSize: '11px', color: '#6366f1', fontWeight: '800', letterSpacing: '2px' } },
+            { id: 109, type: 'heading', content: 'The Future of UI Design Is More Human Than Ever', style: { position: 'absolute', left: '40px', top: '618px', width: '620px', fontSize: '36px', fontWeight: '900', color: '#0f172a', lineHeight: '1.18', letterSpacing: '-0.5px' } },
+            { id: 110, type: 'text', content: 'As AI tools become ubiquitous, the defining edge for designers is empathy — understanding context, emotion, and human nuance that no algorithm can replicate.', style: { position: 'absolute', left: '40px', top: '745px', width: '580px', fontSize: '16px', color: '#475569', lineHeight: '1.7' } },
+            { id: 111, type: 'text', content: 'By Laura Chen  .  8 min read  .  March 11, 2026', style: { position: 'absolute', left: '40px', top: '828px', width: '450px', fontSize: '12px', color: '#94a3b8', fontWeight: '600' } },
+            // sidebar divider
+            { id: 112, type: 'text', content: '', style: { position: 'absolute', left: '790px', top: '142px', width: '1px', height: '730px', backgroundColor: '#e2e8f0' } },
+            { id: 113, type: 'text', content: 'TRENDING NOW', style: { position: 'absolute', left: '820px', top: '142px', width: '340px', fontSize: '10px', color: '#0f172a', fontWeight: '800', letterSpacing: '2px', borderBottom: '2px solid #0f172a', paddingBottom: '8px' } },
+            // sidebar item 1
+            { id: 114, type: 'image', content: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=200&q=80', style: { position: 'absolute', left: '820px', top: '176px', width: '88px', height: '66px', objectFit: 'cover', borderRadius: '4px' } },
+            { id: 115, type: 'text', content: 'TECH', style: { position: 'absolute', left: '920px', top: '180px', width: '200px', fontSize: '10px', color: '#6366f1', fontWeight: '800', letterSpacing: '1px' } },
+            { id: 116, type: 'heading', content: 'How Dashboards Are Reshaping Decision-Making', style: { position: 'absolute', left: '920px', top: '196px', width: '220px', fontSize: '14px', fontWeight: '700', color: '#0f172a', lineHeight: '1.3' } },
+            { id: 117, type: 'text', content: '5 min read', style: { position: 'absolute', left: '920px', top: '238px', width: '150px', fontSize: '11px', color: '#94a3b8' } },
+            { id: 118, type: 'text', content: '', style: { position: 'absolute', left: '820px', top: '260px', width: '340px', height: '1px', backgroundColor: '#f1f5f9' } },
+            // sidebar item 2
+            { id: 119, type: 'image', content: 'https://images.unsplash.com/photo-1524634126442-357e0eac3c14?auto=format&fit=crop&w=200&q=80', style: { position: 'absolute', left: '820px', top: '274px', width: '88px', height: '66px', objectFit: 'cover', borderRadius: '4px' } },
+            { id: 120, type: 'text', content: 'CULTURE', style: { position: 'absolute', left: '920px', top: '278px', width: '200px', fontSize: '10px', color: '#ec4899', fontWeight: '800', letterSpacing: '1px' } },
+            { id: 121, type: 'heading', content: 'Why Minimalist Spaces Are Trending Globally', style: { position: 'absolute', left: '920px', top: '294px', width: '220px', fontSize: '14px', fontWeight: '700', color: '#0f172a', lineHeight: '1.3' } },
+            { id: 122, type: 'text', content: '4 min read', style: { position: 'absolute', left: '920px', top: '336px', width: '150px', fontSize: '11px', color: '#94a3b8' } },
+            { id: 123, type: 'text', content: '', style: { position: 'absolute', left: '820px', top: '358px', width: '340px', height: '1px', backgroundColor: '#f1f5f9' } },
+            // sidebar item 3
+            { id: 124, type: 'image', content: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=200&q=80', style: { position: 'absolute', left: '820px', top: '372px', width: '88px', height: '66px', objectFit: 'cover', borderRadius: '4px' } },
+            { id: 125, type: 'text', content: 'STYLE', style: { position: 'absolute', left: '920px', top: '376px', width: '200px', fontSize: '10px', color: '#f59e0b', fontWeight: '800', letterSpacing: '1px' } },
+            { id: 126, type: 'heading', content: 'Products Redefining Modern Everyday Carry', style: { position: 'absolute', left: '920px', top: '392px', width: '220px', fontSize: '14px', fontWeight: '700', color: '#0f172a', lineHeight: '1.3' } },
+            { id: 127, type: 'text', content: '3 min read', style: { position: 'absolute', left: '920px', top: '432px', width: '150px', fontSize: '11px', color: '#94a3b8' } },
+            // newsletter box
+            { id: 128, type: 'text', content: '', style: { position: 'absolute', left: '820px', top: '502px', width: '340px', height: '210px', backgroundColor: '#0f172a', borderRadius: '8px' } },
+            { id: 129, type: 'heading', content: 'Get stories delivered daily.', style: { position: 'absolute', left: '844px', top: '524px', width: '290px', fontSize: '20px', fontWeight: '800', color: '#ffffff', lineHeight: '1.3' } },
+            { id: 130, type: 'text', content: 'Join 42,000+ readers who get the best of the web every morning.', style: { position: 'absolute', left: '844px', top: '582px', width: '290px', fontSize: '13px', color: '#94a3b8', lineHeight: '1.5' } },
+            { id: 131, type: 'button', content: 'Subscribe Free', style: { position: 'absolute', left: '844px', top: '638px', width: '185px', height: '40px', backgroundColor: '#6366f1', color: '#ffffff', border: 'none', borderRadius: '6px', fontSize: '13px', fontWeight: '700', cursor: 'pointer' } },
+            // articles section header
+            { id: 132, type: 'text', content: '', style: { position: 'absolute', left: '40px', top: '900px', width: '1120px', height: '1px', backgroundColor: '#e2e8f0' } },
+            { id: 133, type: 'heading', content: 'Latest Articles', style: { position: 'absolute', left: '40px', top: '922px', width: '400px', fontSize: '20px', fontWeight: '900', color: '#0f172a', letterSpacing: '-0.5px' } },
+            { id: 134, type: 'text', content: 'View all', style: { position: 'absolute', left: '1060px', top: '928px', width: '100px', fontSize: '13px', color: '#6366f1', fontWeight: '700', cursor: 'pointer' } },
+            // card 1
+            { id: 135, type: 'image', content: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=400&q=80', style: { position: 'absolute', left: '40px', top: '966px', width: '350px', height: '210px', borderRadius: '6px', objectFit: 'cover' } },
+            { id: 136, type: 'text', content: 'DEVELOPMENT', style: { position: 'absolute', left: '40px', top: '1190px', width: '200px', fontSize: '10px', color: '#6366f1', fontWeight: '800', letterSpacing: '2px' } },
+            { id: 137, type: 'heading', content: 'Why Every Frontend Dev Should Learn Design Systems', style: { position: 'absolute', left: '40px', top: '1208px', width: '350px', fontSize: '17px', fontWeight: '800', color: '#0f172a', lineHeight: '1.35' } },
+            { id: 138, type: 'text', content: 'Consistency at scale starts with a shared visual language between designers and engineers.', style: { position: 'absolute', left: '40px', top: '1272px', width: '350px', fontSize: '14px', color: '#64748b', lineHeight: '1.6' } },
+            { id: 139, type: 'text', content: 'March 10  .  6 min read', style: { position: 'absolute', left: '40px', top: '1340px', width: '220px', fontSize: '11px', color: '#94a3b8', fontWeight: '600' } },
+            // card 2
+            { id: 140, type: 'image', content: 'https://images.unsplash.com/photo-1558655146-d09347e92766?auto=format&fit=crop&w=400&q=80', style: { position: 'absolute', left: '425px', top: '966px', width: '350px', height: '210px', borderRadius: '6px', objectFit: 'cover' } },
+            { id: 141, type: 'text', content: 'UX RESEARCH', style: { position: 'absolute', left: '425px', top: '1190px', width: '200px', fontSize: '10px', color: '#ec4899', fontWeight: '800', letterSpacing: '2px' } },
+            { id: 142, type: 'heading', content: 'The Art of Asking the Right Question in User Interviews', style: { position: 'absolute', left: '425px', top: '1208px', width: '350px', fontSize: '17px', fontWeight: '800', color: '#0f172a', lineHeight: '1.35' } },
+            { id: 143, type: 'text', content: 'Great research is not just about listening. It is about knowing what to listen for.', style: { position: 'absolute', left: '425px', top: '1272px', width: '350px', fontSize: '14px', color: '#64748b', lineHeight: '1.6' } },
+            { id: 144, type: 'text', content: 'March 9  .  5 min read', style: { position: 'absolute', left: '425px', top: '1340px', width: '220px', fontSize: '11px', color: '#94a3b8', fontWeight: '600' } },
+            // card 3
+            { id: 145, type: 'image', content: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=400&q=80', style: { position: 'absolute', left: '810px', top: '966px', width: '350px', height: '210px', borderRadius: '6px', objectFit: 'cover' } },
+            { id: 146, type: 'text', content: 'PRODUCTIVITY', style: { position: 'absolute', left: '810px', top: '1190px', width: '200px', fontSize: '10px', color: '#f59e0b', fontWeight: '800', letterSpacing: '2px' } },
+            { id: 147, type: 'heading', content: 'Time Is a System: Structure Your Week Like a Pro', style: { position: 'absolute', left: '810px', top: '1208px', width: '350px', fontSize: '17px', fontWeight: '800', color: '#0f172a', lineHeight: '1.35' } },
+            { id: 148, type: 'text', content: 'The highest performers do not manage time. They architect it into repeatable, intentional systems.', style: { position: 'absolute', left: '810px', top: '1272px', width: '350px', fontSize: '14px', color: '#64748b', lineHeight: '1.6' } },
+            { id: 149, type: 'text', content: 'March 8  .  7 min read', style: { position: 'absolute', left: '810px', top: '1340px', width: '220px', fontSize: '11px', color: '#94a3b8', fontWeight: '600' } },
+            // footer
+            { id: 150, type: 'text', content: '', style: { position: 'absolute', left: '0px', top: '1400px', width: '1200px', height: '1px', backgroundColor: '#e2e8f0' } },
+            { id: 151, type: 'heading', content: 'The Journal', style: { position: 'absolute', left: '40px', top: '1428px', width: '180px', fontSize: '20px', fontWeight: '900', color: '#0f172a' } },
+            { id: 152, type: 'text', content: 'Independent editorial. No ads. No paywalls.', style: { position: 'absolute', left: '40px', top: '1460px', width: '360px', fontSize: '14px', color: '#64748b' } },
+            { id: 153, type: 'text', content: 'Design  .  Tech  .  Culture  .  Travel  .  About  .  Contact', style: { position: 'absolute', left: '450px', top: '1440px', width: '710px', fontSize: '13px', color: '#94a3b8', fontWeight: '600', textAlign: 'right' } },
+            { id: 154, type: 'text', content: '2026 The Journal. All rights reserved.', style: { position: 'absolute', left: '40px', top: '1502px', width: '500px', fontSize: '12px', color: '#cbd5e1' } },
+        ]
+    },
 ];
+
 
 // ─────────────────── PREBUILT SECTIONS ───────────────────
 export const PREBUILT_SECTIONS = [
@@ -195,7 +289,7 @@ export const PREBUILT_SECTIONS = [
             { type: 'heading', content: 'Transform Your Business', style: { position: 'absolute', left: '100px', top: '150px', width: '500px', fontSize: '56px', fontWeight: '800', color: '#111827', lineHeight: '1.1' } },
             { type: 'text', content: 'Build beautiful websites in minutes with our intuitive drag-and-drop designer.', style: { position: 'absolute', left: '100px', top: '300px', width: '450px', fontSize: '20px', color: '#4b5563', lineHeight: '1.6' } },
             { type: 'button', content: 'Start Building', style: { position: 'absolute', left: '100px', top: '400px', width: '180px', height: '50px', backgroundColor: '#6366f1', color: '#ffffff', borderRadius: '30px', border: 'none', fontWeight: '600', fontSize: '16px' } },
-            { type: 'image', content: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80', style: { position: 'absolute', left: '600px', top: '120px', width: '500px', height: '360px', borderRadius: '16px', objectFit: 'cover', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' } }
+            { type: 'image', content: 'https://images.unsplash.com/photo-1551650975-87deedd944c3?auto=format&fit=crop&w=800&q=80', style: { position: 'absolute', left: '600px', top: '120px', width: '500px', height: '360px', borderRadius: '16px', objectFit: 'cover', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' } }
         ]
     },
     {
