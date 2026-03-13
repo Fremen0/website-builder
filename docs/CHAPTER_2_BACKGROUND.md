@@ -7,36 +7,104 @@ The development of modern web applications has shifted significantly from static
 The project fundamentally relies on the core languages of the web to ensure cross-browser compatibility and high performance.
 
 ### 2.2.1 JavaScript
-JavaScript is the primary programming language driving both the client and server sides of the project. Using a unified language stack (often referred to as full-stack JavaScript) significantly streamlines development, data exchange, and system maintenance. It enables complex logic, event handling, and real-time updates within the website builder's intuitive drag-and-drop interface.
+JavaScript is the primary programming language driving both the client and server sides of the project. Using a unified language stack (often referred to as full-stack JavaScript) significantly streamlines development, data exchange, and system maintenance [1]. It enables complex logic, event handling, and real-time updates within the website builder's intuitive drag-and-drop interface.
 
-### 2.2.2 HTML5 & CSS3
-While JavaScript powers the logic, HyperText Markup Language (HTML5) and Cascading Style Sheets (CSS3) form the structural and visual foundation. The website builder relies heavily on advanced CSS features—such as Flexbox and CSS Grid—combined with absolute positioning to construct its Hybrid Layout Engine. This allows for semantic element structuring and responsive design capabilities manipulated directly by the user.
+### 2.2.2 HTML5
+While JavaScript powers the logic, HyperText Markup Language (HTML5) forms the structural foundation. The website builder utilizes HTML5's extensive array of semantic elements to appropriately structure content, improving accessibility and machine-readability of the resulting web pages [2].
+
+### 2.2.3 CSS3
+Cascading Style Sheets (CSS3) provides the visual foundation. The website builder relies heavily on advanced CSS features—such as Flexbox and CSS Grid—combined with absolute positioning to construct its Hybrid Layout Engine. This allows for responsive design capabilities manipulated directly by the user, facilitating the creation of complex and optimal web layouts [3].
 
 ## 2.3 Frameworks and Libraries
 To accelerate development, ensure high performance, and maintain a scalable architectural foundation, several powerful JavaScript frameworks and libraries were incorporated into the system. These specific frameworks were chosen due to their proven capabilities in managing highly intensive user interactions and data handling tasks.
 
 ### 2.3.1 React.js
-React.js is an open-source, component-based JavaScript library developed for building complex and dynamic user interfaces. It is predominantly utilized for constructing Single Page Applications (SPAs) where seamless and high-frequency interactivity is mandatory. In the context of the Template-Based Website Builder, React plays a pivotal role in handling the complex state of the design canvas.
+React.js is an open-source, component-based JavaScript library developed for building complex and dynamic user interfaces [4]. It is predominantly utilized for constructing Single Page Applications (SPAs) where seamless and high-frequency interactivity is mandatory. In the context of the Template-Based Website Builder, React plays a pivotal role in handling the complex state of the design canvas.
 
 Several core features make React indispensable for this project:
-- **Component-Based Architecture**: React allows the UI to be divided into independent, reusable pieces (e.g., buttons, sidebars, text wrappers, and the canvas itself). This modularity simplifies the codebase and allows each element on the canvas to independently manage its own styles and positions.
-- **The Virtual DOM and Reconciliation**: Directly manipulating the browser's Document Object Model (DOM) is computationally expensive. When a user drags an element across the builder's canvas, its coordinates `(X, Y)` update continuously. React addresses this through its "Virtual DOM", an in-memory representation of the actual DOM. React calculates the most efficient way to apply these coordinates (using its reconciliation algorithm) and updates only the specific element completely avoiding full-page re-renders. This drastically minimizes "layout thrashing" and ensures a smooth 60-FPS dragging experience.
-- **Robust State Management**: Website builders require a single source of truth to track all user changes simultaneously, ranging from selecting an element to modifying its border radius in a properties panel. React provides advanced hooks (such as `useState` and `useEffect`) that make tracking and synchronizing these deep, nested properties efficient and reliable.
+- **Component-Based Architecture**: React allows the UI to be divided into independent, reusable pieces (e.g., buttons, sidebars, text wrappers, and the canvas itself). This modularity simplifies the codebase and allows each element on the canvas to independently manage its own styles and positions [4].
+- **The Virtual DOM and Reconciliation**: Directly manipulating the browser's Document Object Model (DOM) is computationally expensive. When a user drags an element across the builder's canvas, its coordinates `(X, Y)` update continuously. React addresses this through its "Virtual DOM", an in-memory representation of the actual DOM. React calculates the most efficient way to apply these coordinates (using its reconciliation algorithm) and updates only the specific element completely avoiding full-page re-renders. This drastically minimizes "layout thrashing" and ensures a smooth 60-FPS dragging experience [4].
+- **Robust State Management**: Website builders require a single source of truth to track all user changes simultaneously, ranging from selecting an element to modifying its border radius in a properties panel. React provides advanced hooks (such as `useState` and `useEffect`) that make tracking and synchronizing these deep, nested properties efficient and reliable [6].
 
 ### 2.3.2 Node.js and Express.js
 For the backend architecture, the system utilizes Node.js paired with the Express.js framework to create a highly responsive and scalable server environment.
 
-- **Node.js (Event-Driven Architecture)**: Node.js is a cross-platform runtime environment that executes JavaScript code server-side. Unlike traditional multi-threaded server models (like Apache), Node.js operates on a single-threaded, non-blocking, event-driven architecture. This design is exceptionally efficient for handling numerous concurrent Input/Output (I/O) operations. In the website builder, when users save projects, the application transmits large JSON trees (representing the layout schema) to the server. Node.js processes these intense data payloads asynchronously, ensuring the server remains responsive without buffering.
-- **Express.js (Routing and Middleware)**: Paired tightly with Node.js, Express.js acts as a minimal yet powerful web framework. It provides a robust set of features for web applications, primarily acting as the routing layer. In this project, Express is utilized to construct highly secure RESTful APIs. It simplifies the implementation of "Middleware" functions—such as parsing incoming JSON requests, establishing secure cross-origin resource sharing (CORS) policies, and authenticating user requests—facilitating secure and rapid communication between the React frontend editor and the database.
+- **Node.js (Event-Driven Architecture)**: Node.js is a cross-platform runtime environment that executes JavaScript code server-side. Unlike traditional multi-threaded server models (like Apache), Node.js operates on a single-threaded, non-blocking, event-driven architecture [5]. This design is exceptionally efficient for handling numerous concurrent Input/Output (I/O) operations. In the website builder, when users save projects, the application transmits large JSON trees (representing the layout schema) to the server. Node.js processes these intense data payloads asynchronously, ensuring the server remains responsive without buffering [5].
+- **Express.js (Routing and Middleware)**: Paired tightly with Node.js, Express.js acts as a minimal yet powerful web framework. It provides a robust set of features for web applications, primarily acting as the routing layer. In this project, Express is utilized to construct highly secure RESTful APIs [1]. It simplifies the implementation of "Middleware" functions—such as parsing incoming JSON requests, establishing secure cross-origin resource sharing (CORS) policies, and authenticating user requests—facilitating secure and rapid communication between the React frontend editor and the database.
 
 ## 2.4 Development Tools
-To implement complex user interactions without reinventing the wheel, specialized libraries were integrated to support the core engine's capabilities.
+To facilitate the creation, debugging, and testing of the application, as well as to implement complex interactions safely, several development tools, environments, and specialized libraries were utilized throughout the project lifecycle.
 
-### 2.4.1 React Drag and Drop (React DnD)
-A crucial aspect of any modern website builder is the ability to select, move, and place elements on a canvas intuitively. React DnD is a powerful set of React utilities that provides high-level abstractions for handling complex drag-and-drop interfaces. Unlike standard HTML5 drag-and-drop APIs, React DnD allows for isolated, state-driven interactions. It makes it possible to seamlessly transfer data (such as dragged component types and unique IDs) across different sections of the workspace. This library forms the backbone of the Hybrid Positioning Engine, ensuring smooth interactions, accurate dropping calculations, and visual updates for the component layout in real time.
+### 2.4.1 Visual Studio Code
+Visual Studio Code (VS Code) is a powerful, lightweight source code editor. It was adopted as the primary Integrated Development Environment (IDE) for its extensive ecosystem of extensions, seamless Git integration, and robust support for the full-stack JavaScript environment [8].
+
+### 2.4.2 Google Antigravity
+Google Antigravity is an advanced agentic AI coding assistant that integrates directly into the development workflow. It was utilized for intelligent code generation, rapid refactoring, debugging complex logic, and assisting in system design, significantly enhancing overall developer productivity [9].
+
+### 2.4.3 Neovim
+Neovim is a highly extensible, terminal-based text editor. It was employed for rapid script editing, server configurations, and efficient shell-based workflows, offering a fast, keyboard-centric environment for quick code modifications [10].
+
+### 2.4.4 Web Browsers (Google Chrome & Firefox)
+Testing the application and its generated layouts across multiple modern rendering engines is critical, as debugging is deeply context-dependent [11].
+- **Google Chrome**: Served as the primary browser for development and live debugging, leveraging the powerful Chrome DevTools to inspect DOM elements, monitor network activity, and analyze React component states.
+- **Mozilla Firefox**: Utilized to ensure cross-browser compatibility. Its specialized developer tools provide unique advantages, particularly for deeply inspecting and tweaking complex CSS Grid and Flexbox layouts [11].
+
+### 2.4.5 React Drag and Drop (React DnD)
+A crucial aspect of any modern website builder is the ability to select, move, and place elements on a canvas intuitively. React DnD is a powerful set of React utilities that provides high-level abstractions for handling complex drag-and-drop interfaces. Unlike standard HTML5 drag-and-drop APIs, React DnD allows for isolated, state-driven interactions. It makes it possible to seamlessly transfer data (such as dragged component types and unique IDs) across different sections of the workspace. This library forms the backbone of the Hybrid Positioning Engine, ensuring smooth interactions, accurate dropping calculations, and visual updates for the component layout in real time [6].
+
+### 2.4.6 Version Control (Git & GitHub)
+Robust source code management and collaborative capabilities are fundamental to modern software engineering. 
+- **Git**: Employed as the primary distributed version control system (VCS). It enables tracking granular changes across the codebase, managing different software versions, and safely reverting to previous states if issues arise [13].
+- **GitHub**: Utilized as the cloud-based hosting platform for the Git repository. It facilitates seamless collaboration, code review via pull requests, issue tracking, and comprehensive project management [12].
 
 ## 2.5 Database Design
 Given the nature of website builders, user projects consist of highly nested, varied data structures (like HTML trees and CSS styles) rather than rigid, uniform data blocks. Therefore, a flexible data storage solution is required.
 
 ### 2.5.1 MongoDB
-MongoDB is a leading NoSQL, document-oriented database system that stores data in flexible, JSON-like documents (BSON). This structure perfectly aligns with the website builder's core architecture. In this project, every page or template created by a user is essentially represented as a hierarchical JSON tree containing UI elements, node properties, and styles. Using MongoDB allows the backend to store, query, and update these complex page structures natively and efficiently without the need for strict, predefined relational SQL tables. This ensures that massive templates and deeply customized user projects load quickly and can be saved reliably.
+MongoDB is a leading NoSQL, document-oriented database system that stores data in flexible, JSON-like documents (BSON). This structure perfectly aligns with the website builder's core architecture [7]. Using MongoDB allows the backend to store, query, and update complex page structures natively and efficiently without the need for strict, predefined relational SQL tables. This ensures that massive templates and deeply customized user projects load quickly and can be saved reliably.
+
+#### Core Collections (Database Tables)
+The system's database schema is designed around three primary collections to manage users, their ongoing projects, and reusable layout templates:
+
+##### 1. User Collection
+Manages authentication and user profiles.
+
+| Field | Data Type (Length) | Content |
+| :--- | :--- | :--- |
+| `name` | String (min 2) | The user's full name. |
+| `email` | String | The user's email address (must be unique). |
+| `password` | String (min 6) | The user's password, securely hashed via bcrypt. |
+| `avatar` | String | A URL or path to the user's profile picture. |
+
+##### 2. Project Collection
+Acts as the core storage for individual websites created by users.
+
+| Field | Data Type (Length) | Content |
+| :--- | :--- | :--- |
+| `title` | String | The name of the project. |
+| `userId` | ObjectId | A reference linking the project to its creator (User). |
+| `data` | Object (JSON) | A flexible JSON object field that stores the entire deeply nested layout structure (UI elements, properties, absolute coordinates) of the website. |
+| `isPublished` | Boolean | A flag indicating if the website is currently live. |
+
+##### 3. Template Collection
+Stores pre-designed, ready-to-use component layouts that users can drop into their projects.
+
+| Field | Data Type (Length) | Content |
+| :--- | :--- | :--- |
+| `name` | String | The unique identifier or name of the template. |
+| `components` | Array | An array storing the structural JSON of the template elements. |
+
+## 2.6 References
+[1] E. Brown, *Web Development with Node and Express: Leveraging the JavaScript Stack*, 2nd ed. Sebastopol, CA: O'Reilly Media, 2019.
+[2] J. Duckett, *HTML and CSS: Design and Build Websites*, 1st ed. Indianapolis, IN: Wiley, 2011.
+[3] E. A. Meyer and E. Weyl, *CSS: The Definitive Guide*, 4th ed. Sebastopol, CA: O'Reilly Media, 2017.
+[4] V. M. Ganeshan, "Web Development Using ReactJS," *2023 5th International Conference on Advances in Computing, Communication Control and Networking (ICAC3N)*, 2023, pp. 1-5.
+[5] S. Tilkov and S. Vinoski, "Node.js: Using JavaScript to Build High-Performance Network Programs," *IEEE Internet Computing*, vol. 14, no. 6, pp. 80-83, Nov.-Dec. 2010.
+[6] A. Banks and E. Porcello, *Learning React: Modern Patterns for Developing React Apps*, 2nd ed. Sebastopol, CA: O'Reilly Media, 2020.
+[7] Y. Li and S. Manoharan, "A performance comparison of SQL and NoSQL databases," *2013 IEEE Pacific Rim Conference on Communications, Computers and Signal Processing (PACRIM)*, 2013, pp. 15-19.
+[8] J. Tan, Y. Chen, and S. Jiao, "Visual Studio Code in Introductory Computer Science Course: An Experience Report," *ACM*, 2023.
+[9] IEEE Computer Society, "The Impact of AI on Productivity and Code in Software Engineering," *IEEE*, 2024.
+[10] B. Perez et al., "Learning the State Machine Behind a Modal Text Editor: The (Neo)Vim Case Study," *IEEE*, 2024.
+[11] M. Wang et al., "How Developers Choose Debugging Strategies for Challenging Web Application Defects," *ACM*, 2024.
+[12] N. Dinh et al., "GitHub Analytics to Support Collaboration in Software Engineering Teams," *IEEE*, 2024.
+[13] P. Spinellis, "Git," *IEEE Software*, vol. 29, no. 3, pp. 100-101, 2012.
