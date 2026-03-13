@@ -899,33 +899,56 @@ const Editor = ({ onNavigateAbout }) => {
             setShowGallery(false);
             return;
         }
-        if (components.length > 0) {
+
+        const isMultiPage = template.pages && Array.isArray(template.pages);
+        const currentHasContent = isMultiPage
+            ? pages.some(p => p.components.length > 0)
+            : components.length > 0;
+
+        if (currentHasContent) {
             if (!window.confirm('Loading a template will replace your current work. Are you sure?')) {
                 return;
             }
         }
-        saveHistory();
-        
-        // Hybrid Logic: Preserve 'absolute' if coordinates exist, otherwise allow 'relative' for sections
-        const normalized = JSON.parse(JSON.stringify(template.components)).map((comp, idx) => {
-            const hasCoords = comp.style?.left !== undefined && comp.style?.top !== undefined;
 
-            return {
-                ...comp,
-                id: Date.now() + idx,
-                style: {
-                    ...comp.style,
-                    // If it has coords, it's a Wix-style absolute element. 
-                    // If not (like pre-built sections), it's a Webflow-style relative element.
-                    position: comp.style?.position || (hasCoords ? 'absolute' : 'relative'),
-                    margin: comp.style?.margin || (hasCoords ? '0' : '0 auto'),
-                },
-                responsiveStyles: comp.responsiveStyles || { tablet: {}, mobile: {} },
-                states: comp.states || { hover: {}, active: {} },
-                link: comp.link || '',
-            };
-        });
-        setComponents(normalized);
+        saveHistory();
+
+        const normalizeComponents = (comps) => {
+            return JSON.parse(JSON.stringify(comps)).map((comp, idx) => {
+                const hasCoords = comp.style?.left !== undefined && comp.style?.top !== undefined;
+                return {
+                    ...comp,
+                    id: Date.now() + Math.random() + idx, // Unique ID
+                    style: {
+                        ...comp.style,
+                        position: comp.style?.position || (hasCoords ? 'absolute' : 'relative'),
+                        margin: comp.style?.margin || (hasCoords ? '0' : '0 auto'),
+                    },
+                    responsiveStyles: comp.responsiveStyles || { tablet: {}, mobile: {} },
+                    states: comp.states || { hover: {}, active: {} },
+                    link: comp.link || '',
+                };
+            });
+        };
+
+        if (isMultiPage) {
+            const normalizedPages = template.pages.map(page => ({
+                ...page,
+                components: normalizeComponents(page.components),
+                style: page.style || {
+                    backgroundImage: '',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    backgroundRepeat: 'no-repeat'
+                }
+            }));
+            setPages(normalizedPages);
+            setActivePageId(normalizedPages[0].id);
+        } else {
+            const normalized = normalizeComponents(template.components);
+            setComponents(normalized);
+        }
+
         setShowGallery(false);
     };
 

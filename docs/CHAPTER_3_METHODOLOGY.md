@@ -17,7 +17,7 @@ Communication between the two layers occurs asynchronously via Axios, with an au
 
 ## 3.3 User Interfaces and Pages
 
-The application is heavily modularized, rendering different "pages" or "views" based on user interaction securely bounded by authentication.
+The system is heavily modularized, rendering different "pages" or "views" based on user interaction securely bounded by authentication.
 
 ### 3.3.1 User Page (Authentication and Dashboard)
 Access to the builder tool requires user identification. The `AuthPage` serves as the gateway, handling user registration and login securely. 

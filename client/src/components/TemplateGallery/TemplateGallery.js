@@ -4,6 +4,8 @@ import styles from './TemplateGallery.module.css';
 
 // ─── Shared HTML generator ───────────────────────────────────
 const generatePreviewHTML = (template) => {
+    const components = template.components || (template.pages && template.pages[0]?.components) || [];
+    
     const componentToHTML = (comp) => {
         const styleStr = Object.entries(comp.style || {}).map(([k, v]) =>
             `${k.replace(/[A-Z]/g, m => '-' + m.toLowerCase())}:${v}`
@@ -17,7 +19,7 @@ const generatePreviewHTML = (template) => {
             default:        return `<div style="${styleStr}">${comp.content}</div>`;
         }
     };
-    const body = template.components.map(componentToHTML).join('\n');
+    const body = components.map(componentToHTML).join('\n');
     return `<!DOCTYPE html><html><head>
 <meta charset="UTF-8">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
