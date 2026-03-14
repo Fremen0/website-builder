@@ -4,7 +4,7 @@ import './AuthPage.css';
 
 const AuthPage = ({ onSuccess }) => {
     const [mode, setMode] = useState('login'); // 'login' | 'register'
-    const [formData, setFormData] = useState({ name: '', email: '', password: '' });
+    const [formData, setFormData] = useState({ name: '', email: '', password: '', confirmPassword: '' });
     const [localError, setLocalError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
@@ -50,6 +50,11 @@ const AuthPage = ({ onSuccess }) => {
                 setIsLoading(false);
                 return;
             }
+            if (formData.password !== formData.confirmPassword) {
+                setLocalError('Passwords do not match');
+                setIsLoading(false);
+                return;
+            }
             result = await register(formData.name, formData.email, formData.password);
         }
 
@@ -63,7 +68,7 @@ const AuthPage = ({ onSuccess }) => {
 
     const switchMode = () => {
         setMode(mode === 'login' ? 'register' : 'login');
-        setFormData({ name: '', email: '', password: '' });
+        setFormData({ name: '', email: '', password: '', confirmPassword: '' });
         setLocalError('');
         setError(null);
     };
@@ -143,7 +148,7 @@ const AuthPage = ({ onSuccess }) => {
                                     id="auth-name"
                                     type="text"
                                     name="name"
-                                    placeholder="e.g. John Doe"
+                                    placeholder="Your Name"
                                     value={formData.name}
                                     onChange={handleChange}
                                     autoComplete="name"
@@ -214,6 +219,49 @@ const AuthPage = ({ onSuccess }) => {
                                     </svg>
                                 )}
                             </button>
+                        </div>
+                    </div>
+
+                    {/* Confirm Password field - only for register */}
+                    <div className={`auth-field-wrapper ${mode === 'register' ? 'auth-field--show' : 'auth-field--hide'}`}>
+                        <div className="auth-field">
+                            <label htmlFor="auth-confirm-password">Confirm Password</label>
+                            <div className="auth-input-container">
+                                <span className="auth-input-icon">
+                                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                                    </svg>
+                                </span>
+                                <input
+                                    id="auth-confirm-password"
+                                    type={showPassword ? 'text' : 'password'}
+                                    name="confirmPassword"
+                                    placeholder="Confirm your password"
+                                    value={formData.confirmPassword}
+                                    onChange={handleChange}
+                                    autoComplete="new-password"
+                                />
+                                <button
+                                    type="button"
+                                    className="auth-toggle-password"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    aria-label="Show / hide password"
+                                >
+                                    {showPassword ? (
+                                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
+                                            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                                            <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                                            <line x1="1" y1="1" x2="23" y2="23"/>
+                                        </svg>
+                                    ) : (
+                                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2">
+                                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                            <circle cx="12" cy="12" r="3"/>
+                                        </svg>
+                                    )}
+                                </button>
+                            </div>
                         </div>
                     </div>
 
