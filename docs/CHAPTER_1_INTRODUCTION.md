@@ -30,7 +30,7 @@ The system objectives could be summarized by the following:
 6. Empowering users with professional-grade styling tools.
 
 ## 1.4 Research Organization
-This study is systematically partitioned into four chapters, providing a cohesive progression from theoretical conceptualization to technical implementation and terminal evaluation:
+This research is systematically partitioned into four chapters, providing a cohesive progression from theoretical conceptualization to technical implementation and terminal evaluation:
 
 1.  **Chapter One: Introduction** – Delineates the foundational research landscape by identifying critical bottlenecks in current web authoring paradigms, formulating a precise problem statement, and outlining the technical objectives required to synthesize design flexibility with architectural integrity.
 2.  **Chapter Two: Theoretical Background and Technical Framework** – Elucidates the technological ecosystem underpinning the project, specifically analyzing the MERN stack architecture, the implications of non-blocking I/O operations, and the utility of NoSQL document-oriented modeling for representing dynamic, deeply nested layout schemas.
