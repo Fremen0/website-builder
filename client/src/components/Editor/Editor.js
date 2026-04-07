@@ -1,5 +1,7 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { useAuth } from '../../context/AuthContext';
+import React, { useState, useRef, useCallback, useEffect } from 'react'; // eslint-disable-line no-unused-vars
+import usePageManager from './hooks/usePageManager';
+import useHistory from './hooks/useHistory';
+import useExport from './hooks/useExport';
 import { useDrop } from 'react-dnd';
 import axios from 'axios';
 
@@ -9,268 +11,77 @@ import styles from './Editor.module.css';
 import { PREBUILT_SECTIONS } from '../../data/templates';
 import TemplateGallery from '../TemplateGallery/TemplateGallery';
 
-const ItemTypes = {
-    SIDEBAR_ITEM: 'sidebarItem',
-};
+// ── Extracted pieces ────────────────────────────────────────────────────────
+import getElementDefaults from '../../constants/elementDefaults';
+import FONT_FAMILIES from '../../constants/fontFamilies';
+import UserMenu from './components/UserMenu';
+import SaveTemplateModal from './modals/SaveTemplateModal';
+import AddPageModal from './modals/AddPageModal';
+import RenamePageModal from './modals/RenamePageModal';
+import DeletePageModal from './modals/DeletePageModal';
 
-const FONT_FAMILIES = [
-    'Arial, sans-serif',
-    'Georgia, serif',
-    'Times New Roman, serif',
-    'Courier New, monospace',
-    'Verdana, sans-serif',
-    'Roboto, sans-serif',
-    'Open Sans, sans-serif',
-    'Montserrat, sans-serif',
-    'Playfair Display, serif',
-    'Inter, sans-serif',
-];
-
-
-
-// ===== UserMenu Sub-component =====
-const UserMenu = () => {
-    const { user, logout } = useAuth();
-    const [open, setOpen] = React.useState(false);
-
-    if (!user) return null;
-
-    const initials = user.name
-        ? user.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
-        : '??';
-
-    return (
-        <div style={{ position: 'relative' }}>
-            <button
-                id="user-menu-btn"
-                title={user.name}
-                onClick={() => setOpen(o => !o)}
-                style={{
-                    display: 'flex', alignItems: 'center', gap: '8px',
-                    background: 'rgba(255, 255, 255, 0.7)', border: '1px solid rgba(226, 232, 240, 0.8)',
-                    borderRadius: '12px', padding: '6px 12px', cursor: 'pointer',
-                    color: '#0f172a', fontSize: '0.875rem', fontWeight: '600',
-                    transition: 'all 0.2s', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.01)'
-                }}
-                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.9)'}
-                onMouseLeave={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.7)'}
-            >
-                <span style={{
-                    width: '32px', height: '32px', borderRadius: '10px',
-                    background: 'linear-gradient(135deg, #6366f1, #ec4899)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '0.85rem', fontWeight: '700', color: '#fff', flexShrink: 0,
-                    boxShadow: '0 4px 8px rgba(99, 102, 241, 0.2)'
-                }}>{initials}</span>
-                <span style={{ maxWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.name}</span>
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5"
-                    style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s', opacity: 0.5 }}>
-                    <polyline points="6 9 12 15 18 9" />
-                </svg>
-            </button>
-
-            {open && (
-                <>
-                    {/* Backdrop */}
-                    <div onClick={() => setOpen(false)}
-                        style={{ position: 'fixed', inset: 0, zIndex: 999 }} />
-                    {/* Dropdown */}
-                    <div style={{
-                        position: 'absolute', top: 'calc(100% + 8px)', right: 0,
-                        background: 'rgba(255, 255, 255, 0.95)', border: '1px solid rgba(226, 232, 240, 1)',
-                        backdropFilter: 'blur(16px)',
-                        borderRadius: '16px', padding: '8px', minWidth: '180px',
-                        boxShadow: '0 12px 30px -10px rgba(0,0,0,0.1)', zIndex: 1000,
-                        animation: 'menuIn 0.15s ease'
-                    }}>
-                        <style>{`@keyframes menuIn { from { opacity:0; transform:translateY(-6px) } to { opacity:1; transform:translateY(0) } }`}</style>
-                        <div style={{ padding: '8px 12px 10px', borderBottom: '1px solid rgba(226, 232, 240, 0.8)', marginBottom: '6px' }}>
-                            <div style={{ fontSize: '0.88rem', fontWeight: '700', color: '#0f172a' }}>{user.name}</div>
-                            <div style={{ fontSize: '0.78rem', color: '#64748b', marginTop: '2px' }}>{user.email}</div>
-                        </div>
-                        <button
-                            id="logout-btn"
-                            onClick={() => { logout(); setOpen(false); }}
-                            style={{
-                                display: 'flex', alignItems: 'center', gap: '8px', width: '100%',
-                                padding: '8px 12px', background: 'transparent', border: 'none',
-                                borderRadius: '10px', cursor: 'pointer', color: '#ef4444',
-                                fontSize: '0.87rem', fontWeight: '600', transition: 'background 0.15s'
-                            }}
-                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(254, 226, 226, 0.8)'}
-                            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                        >
-                            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                                <polyline points="16 17 21 12 16 7"/>
-                                <line x1="21" y1="12" x2="9" y2="12"/>
-                            </svg>
-                            Sign Out
-                        </button>
-                    </div>
-                </>
-            )}
-        </div>
-    );
-};
-// ==================================
+const ItemTypes = { SIDEBAR_ITEM: 'sidebarItem' };
 
 const Editor = ({ onNavigateAbout }) => {
-    // State to store page components (will be connected to Backend later)
-    // State to store page components (will be connected to Backend later)
-    const [pages, setPages] = useState([{
-        id: 'home',
-        name: 'Home',
-        path: '/',
-        components: [],
-        style: {
-            backgroundImage: '',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat'
-        }
-    }]);
-    const [activePageId, setActivePageId] = useState('home');
+    // ── Page management (state + CRUD) ───────────────────────────────────────
+    const {
+        pages, setPages,
+        activePageId, setActivePageId,
+        activePage,
+        setComponents, updatePageStyle,
+        addPage, deletePage, renamePage,
+        switchPage: switchPageBase,
+        showAddPageModal, setShowAddPageModal,
+        newPageName, setNewPageName,
+        editingPage, setEditingPage,
+        editPageName, setEditPageName,
+        deletingPage, setDeletingPage,
+    } = usePageManager();
 
-    // Derived state for backward compatibility within component
-    const activePage = pages.find(p => p.id === activePageId) || pages[0];
     const components = activePage.components;
 
-    // Setters that update the active page
-    const setComponents = useCallback((newComponentsOrUpdater) => {
-        setPages(prevPages => prevPages.map(page => {
-            if (page.id === activePageId) {
-                const newComponents = typeof newComponentsOrUpdater === 'function'
-                    ? newComponentsOrUpdater(page.components)
-                    : newComponentsOrUpdater;
-                return { ...page, components: newComponents };
-            }
-            return page;
-        }));
-    }, [activePageId]);
-
-    const updatePageStyle = useCallback((key, value) => {
-        setPages(prevPages => prevPages.map(page => {
-            if (page.id === activePageId) {
-                return { ...page, style: { ...page.style, [key]: value } };
-            }
-            return page;
-        }));
-    }, [activePageId]);
-
-    const backgroundImage = activePage.style.backgroundImage;
-    const setBackgroundImage = (val) => updatePageStyle('backgroundImage', val);
-
-    const backgroundSize = activePage.style.backgroundSize;
-    const setBackgroundSize = (val) => updatePageStyle('backgroundSize', val);
-
+    // Background style helpers
+    const backgroundImage   = activePage.style.backgroundImage;
+    const setBackgroundImage    = (val) => updatePageStyle('backgroundImage', val);
+    const backgroundSize    = activePage.style.backgroundSize;
+    const setBackgroundSize     = (val) => updatePageStyle('backgroundSize', val);
     const backgroundPosition = activePage.style.backgroundPosition;
     const setBackgroundPosition = (val) => updatePageStyle('backgroundPosition', val);
+    const backgroundRepeat  = activePage.style.backgroundRepeat;
+    const setBackgroundRepeat   = (val) => updatePageStyle('backgroundRepeat', val);
 
-    const backgroundRepeat = activePage.style.backgroundRepeat;
-    const setBackgroundRepeat = (val) => updatePageStyle('backgroundRepeat', val);
-
+    // ── Canvas / UI state ────────────────────────────────────────────────────
     const canvasRef = useRef(null);
-    const [guides, setGuides] = useState({ x: null, y: null });
+    const [guides, setGuides]       = useState({ x: null, y: null });
     const [selectedId, setSelectedId] = useState(null);
     const [previewMode, setPreviewMode] = useState(false);
-    const [viewMode, setViewMode] = useState('desktop');
+    const [viewMode, setViewMode]   = useState('desktop');
     const [projectId, setProjectId] = useState(null);
-    const [isLoaded, setIsLoaded] = useState(false);
-    // const [saving, setSaving] = useState(false); // Unused
+    const [isLoaded, setIsLoaded]   = useState(false);
     const isFirstLoad = useRef(true);
-    const [history, setHistory] = useState([]);
-    const [future, setFuture] = useState([]);
-    const [showGallery, setShowGallery] = useState(false);
+    const [showGallery, setShowGallery]               = useState(false);
     const [showPropertiesPanel, setShowPropertiesPanel] = useState(true);
     const [openCategories, setOpenCategories] = useState({
-        content: true,
-        layout: true,
-        flexbox: false,
-        typography: true,
-        borders: false,
-        effects: false
+        content: true, layout: true, flexbox: false,
+        typography: true, borders: false, effects: false,
     });
     const [openToolCategories, setOpenToolCategories] = useState({
-        layout: true,
-        basic: true,
-        media: false,
-        sections: false,
-        pages: true,
-        navigator: true
+        layout: true, basic: true, media: false,
+        sections: false, pages: true, navigator: true,
     });
     const [toolbarPos, setToolbarPos] = useState({ top: 0, left: 0, visible: false });
-    const [showSaveModal, setShowSaveModal] = useState(false);
-    const [tempTemplateName, setTempTemplateName] = useState('');
-    const [activeState, setActiveState] = useState('normal'); // 'normal', 'hover', 'active'
-    const [showAddPageModal, setShowAddPageModal] = useState(false);
-    const [newPageName, setNewPageName] = useState('');
-    const [editingPage, setEditingPage] = useState(null);   // { id, name }
-    const [editPageName, setEditPageName] = useState('');
-    const [deletingPage, setDeletingPage] = useState(null); // { id, name }
+    const [showSaveModal, setShowSaveModal]         = useState(false);
+    const [tempTemplateName, setTempTemplateName]   = useState('');
+    const [activeState, setActiveState]             = useState('normal');
 
-    const toggleCategory = (cat) => {
-        setOpenCategories(prev => ({ ...prev, [cat]: !prev[cat] }));
-    };
+    const toggleCategory     = (cat) => setOpenCategories(prev => ({ ...prev, [cat]: !prev[cat] }));
+    const toggleToolCategory = (cat) => setOpenToolCategories(prev => ({ ...prev, [cat]: !prev[cat] }));
 
-    const toggleToolCategory = (cat) => {
-        setOpenToolCategories(prev => ({ ...prev, [cat]: !prev[cat] }));
-    };
+    // switchPage also clears selection
+    const switchPage = (id) => { switchPageBase(id); setSelectedId(null); };
 
-    // Page Management Functions
-    const addPage = () => {
-        const name = newPageName.trim();
-        if (!name) return;
-        const id = name.toLowerCase().replace(/\s+/g, '-');
-
-        if (pages.some(p => p.name === name || p.id === id)) {
-            alert('Page name already exists');
-            return;
-        }
-
-        setPages(prev => [...prev, {
-            id,
-            name,
-            path: `/${id === 'home' ? '' : id}`,
-            components: [],
-            style: {
-                backgroundImage: '',
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                backgroundRepeat: 'no-repeat'
-            }
-        }]);
-        setActivePageId(id);
-        setNewPageName('');
-        setShowAddPageModal(false);
-    };
-
-    const deletePage = (id) => {
-        setPages(prev => prev.filter(p => p.id !== id));
-        if (activePageId === id) {
-            setActivePageId(pages.find(p => p.id !== id)?.id || pages[0].id);
-        }
-        setDeletingPage(null);
-    };
-
-    const renamePage = () => {
-        const name = editPageName.trim();
-        if (!name || !editingPage) return;
-        const newId = name.toLowerCase().replace(/\s+/g, '-');
-        setPages(prev => prev.map(p =>
-            p.id === editingPage.id
-                ? { ...p, name, id: newId, path: `/${newId === 'home' ? '' : newId}` }
-                : p
-        ));
-        if (activePageId === editingPage.id) setActivePageId(newId);
-        setEditingPage(null);
-        setEditPageName('');
-    };
-
-    const switchPage = (id) => {
-        setActivePageId(id);
-        setSelectedId(null);
-    };
+    // ── History (undo / redo) ────────────────────────────────────────────────
+    const { history, future, saveHistory, undo, redo } = useHistory(components, setComponents);
 
     // Track selected element for floating toolbar
     useEffect(() => {
@@ -278,42 +89,17 @@ const Editor = ({ onNavigateAbout }) => {
             setToolbarPos(prev => ({ ...prev, visible: false }));
             return;
         }
-
         const element = document.getElementById(`component-${selectedId}`);
         if (element && canvasRef.current) {
-            const rect = element.getBoundingClientRect();
+            const rect      = element.getBoundingClientRect();
             const canvasRect = canvasRef.current.getBoundingClientRect();
-
             setToolbarPos({
-                top: rect.top - canvasRect.top - 45,
-                left: rect.left - canvasRect.left + (rect.width / 2),
-                visible: true
+                top:  rect.top  - canvasRect.top  - 45,
+                left: rect.left - canvasRect.left + rect.width / 2,
+                visible: true,
             });
         }
     }, [selectedId, components, previewMode]);
-
-    const saveHistory = useCallback(() => {
-        setHistory(prev => [...prev, components]);
-        setFuture([]);
-    }, [components, setHistory, setFuture]);
-
-    const undo = () => {
-        if (history.length === 0) return;
-        const previous = history[history.length - 1];
-        const newHistory = history.slice(0, -1);
-        setFuture(prev => [components, ...prev]);
-        setComponents(previous);
-        setHistory(newHistory);
-    };
-
-    const redo = () => {
-        if (future.length === 0) return;
-        const next = future[0];
-        const newFuture = future.slice(1);
-        setHistory(prev => [...prev, components]);
-        setComponents(next);
-        setFuture(newFuture);
-    };
 
     const moveComponent = (id, left, top) => {
         saveHistory();
@@ -387,6 +173,7 @@ const Editor = ({ onNavigateAbout }) => {
         };
 
         loadLatestProject();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => {
@@ -428,217 +215,9 @@ const Editor = ({ onNavigateAbout }) => {
     const addComponentToCanvas = (item, x, y) => {
         saveHistory();
 
-        let defaultStyle = {};
-        let defaultContent = '';
+        const { style: defaultStyle_, content: defaultContent } = getElementDefaults(item.type);
+        let defaultStyle = { ...defaultStyle_ };
 
-        switch (item.type) {
-            case 'button':
-                defaultStyle = {
-                    backgroundColor: '#6366f1',
-                    color: '#ffffff',
-                    padding: '12px 24px',
-                    border: 'none',
-                    borderRadius: '6px',
-                    cursor: 'pointer',
-                    fontSize: '16px',
-                    fontWeight: '500',
-                    textAlign: 'center',
-                    display: 'inline-block',
-                    margin: '10px',
-                    boxShadow: '0 4px 6px -1px rgba(99, 102, 241, 0.2)'
-                };
-                defaultContent = 'Button';
-                break;
-            case 'image':
-                defaultStyle = {
-                    width: '100%',
-                    height: 'auto',
-                    display: 'block',
-                    margin: '10px 0'
-                };
-                defaultContent = 'https://via.placeholder.com/400x200?text=Image';
-                break;
-            case 'heading':
-                defaultStyle = {
-                    color: '#1e293b',
-                    fontSize: '32px',
-                    fontWeight: 'bold',
-                    padding: '10px',
-                    margin: '10px',
-                    textAlign: 'center',
-                    fontFamily: 'Arial, sans-serif',
-                    backgroundColor: 'transparent'
-                };
-                defaultContent = 'Heading';
-                break;
-            case 'video':
-                defaultStyle = {
-                    width: '100%',
-                    height: '315px',
-                    margin: '10px 0',
-                    display: 'block'
-                };
-                defaultContent = 'https://www.youtube.com/embed/dQw4w9WgXcQ';
-                break;
-            case 'input':
-                defaultStyle = {
-                    padding: '12px 16px',
-                    margin: '10px',
-                    border: '1px solid #cbd5e1',
-                    borderRadius: '8px',
-                    width: '300px',
-                    fontSize: '15px',
-                    backgroundColor: '#ffffff',
-                    color: '#1e293b',
-                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
-                    transition: 'border-color 0.2s',
-                    outline: 'none'
-                };
-                defaultContent = 'Input Field';
-                break;
-            case 'divider':
-                defaultStyle = {
-                    width: '100%',
-                    height: '1px',
-                    backgroundColor: '#94a3b8',
-                    margin: '20px 0',
-                    border: 'none',
-                    display: 'block'
-                };
-                defaultContent = '';
-                break;
-            case 'section':
-                defaultStyle = {
-                    width: '100%',
-                    height: '300px',
-                    backgroundColor: '#f8fafc',
-                    padding: '60px 20px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    border: '1px dashed #cbd5e1',
-                    position: 'relative'
-                };
-                defaultContent = 'Full Width Section';
-                break;
-            case 'div':
-                defaultStyle = {
-                    width: '200px',
-                    height: '200px',
-                    backgroundColor: '#e2e8f0',
-                    display: 'block',
-                    borderRadius: '8px',
-                    border: '1px dashed #94a3b8',
-                    position: 'relative'
-                };
-                defaultContent = '';
-                break;
-            case 'text':
-                defaultStyle = {
-                    color: '#475569',
-                    fontSize: '16px',
-                    lineHeight: '1.6',
-                    padding: '10px',
-                    margin: '10px',
-                    textAlign: 'left',
-                    fontFamily: 'Roboto, sans-serif',
-                    width: 'auto'
-                };
-                defaultContent = 'This is a text paragraph. You can edit this directly.';
-                break;
-            case 'form':
-                defaultStyle = {
-                    width: '350px',
-                    height: 'auto',
-                };
-                defaultContent = 'Contact Us';
-                break;
-            case 'map':
-                defaultStyle = {
-                    width: '100%',
-                    height: '300px',
-                };
-                defaultContent = 'New York, NY';
-                break;
-            case 'audio':
-                defaultStyle = {
-                    width: '300px',
-                    height: '60px',
-                };
-                defaultContent = '';
-                break;
-            case 'iframe':
-                defaultStyle = {
-                    width: '100%',
-                    height: '250px',
-                };
-                defaultContent = '<p style="text-align: center; color: #94a3b8; padding: 20px;">Embed Code Here</p>';
-                break;
-            case 'slider':
-                defaultStyle = {
-                    width: '100%',
-                    height: '300px',
-                    backgroundColor: '#e2e8f0',
-                    borderRadius: '12px'
-                };
-                defaultContent = 'Slider Component';
-                break;
-            case 'icon':
-                defaultStyle = {
-                    width: '50px',
-                    height: '50px',
-                    color: '#6366f1',
-                    fontSize: '40px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                };
-                defaultContent = 'fas fa-star';
-                break;
-            case 'navbar':
-                defaultStyle = {
-                    width: '100%',
-                    height: '60px',
-                    backgroundColor: '#ffffff',
-                    borderBottom: '1px solid #e2e8f0',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '0 20px',
-                    position: 'absolute',
-                    top: '0',
-                    left: '0'
-                };
-                defaultContent = 'Navbar';
-                break;
-            case 'grid':
-                defaultStyle = {
-                    width: '100%',
-                    height: '300px',
-                    display: 'grid',
-                    gridTemplateColumns: '1fr 1fr',
-                    gap: '20px',
-                    padding: '20px',
-                    backgroundColor: '#f8fafc',
-                    border: '1px dashed #cbd5e1'
-                };
-                defaultContent = 'Grid Section';
-                break;
-            default:
-                defaultStyle = {
-                    color: '#1e293b',
-                    fontSize: '16px',
-                    padding: '10px',
-                    margin: '10px',
-                    backgroundColor: 'transparent',
-                    lineHeight: '1.5',
-                    fontFamily: 'Arial, sans-serif',
-                    textAlign: 'center'
-                };
-                defaultContent = 'Edit this text';
-                break;
-        }
 
         // Ensure absolute positioning for all new dropped elements
         defaultStyle = {
@@ -952,160 +531,15 @@ const Editor = ({ onNavigateAbout }) => {
         setShowGallery(false);
     };
 
-    const handleSaveAsTemplate = () => {
-        if (components.length === 0) {
-            alert('Canvas is empty. Add some components before saving as a template.');
-            return;
-        }
+    // ── Export & template functions (via hook) ─────────────────────────
+    const { handleExportHTML, handleExportJSON, handleSaveAsTemplate, confirmSaveTemplate } = useExport({
+        pages, activePageId, components, tempTemplateName, setShowSaveModal,
+    });
+
+    // Wrap handleSaveAsTemplate to also reset the name field
+    const openSaveTemplateModal = () => {
         setTempTemplateName('');
-        setShowSaveModal(true);
-    };
-
-    const confirmSaveTemplate = async () => {
-        if (!tempTemplateName.trim()) {
-            alert('Please enter a template name.');
-            return;
-        }
-
-        try {
-            await axios.post('http://localhost:5000/api/templates', {
-                name: tempTemplateName,
-                components
-            });
-            setShowSaveModal(false);
-            alert(`Template "${tempTemplateName}" saved successfully!`);
-        } catch (error) {
-            const errorMsg = error.response?.data?.msg || 'An unknown error occurred.';
-            console.error('Error saving template:', error);
-            alert(`Failed to save template: ${errorMsg}`);
-        }
-    };
-
-    const handleExportHTML = () => {
-        const page = pages.find(p => p.id === activePageId);
-        if (!page) return;
-
-        const toCss = (style) => {
-            if (!style) return '';
-            return Object.entries(style)
-                .map(([k, v]) => `${k.replace(/[A-Z]/g, m => "-" + m.toLowerCase())}:${v}`)
-                .join('; ');
-        };
-
-        let stylesBlock = '';
-        let tabletStylesBlock = '';
-        let mobileStylesBlock = '';
-
-        const generateComponentHTML = (comp, idx) => {
-            const id = `el-${idx}`;
-
-            // Hybrid Export: Respect the component's position (absolute or relative)
-            const exportStyle = { ...comp.style };
-            if (!exportStyle.position) {
-                exportStyle.position = (comp.style?.left !== undefined && comp.style?.top !== undefined) ? 'absolute' : 'relative';
-            }
-
-            stylesBlock += `#${id} { ${toCss(exportStyle)} }\n`;
-
-            // States
-            if (comp.states?.hover) stylesBlock += `#${id}:hover { ${toCss(comp.states.hover)} }\n`;
-            if (comp.states?.active) stylesBlock += `#${id}:active { ${toCss(comp.states.active)} }\n`;
-
-            // Responsive
-            if (comp.responsiveStyles?.tablet) tabletStylesBlock += `#${id} { ${toCss(comp.responsiveStyles.tablet)} }\n`;
-            if (comp.responsiveStyles?.mobile) mobileStylesBlock += `#${id} { ${toCss(comp.responsiveStyles.mobile)} }\n`;
-
-            const content = comp.content || '';
-            const tag = comp.type === 'heading' ? 'h2' : (comp.type === 'text' ? 'p' : (comp.type === 'button' ? 'button' : 'div'));
-
-            let elementHTML = '';
-            if (comp.type === 'image') {
-                elementHTML = `<img id="${id}" src="${content}" alt="User content" />`;
-            } else if (comp.type === 'video') {
-                elementHTML = `<div id="${id}"><iframe src="${content.replace('watch?v=', 'embed/')}" style="width:100%;height:100%" frameborder="0" allowfullscreen></iframe></div>`;
-            } else if (comp.type === 'divider') {
-                elementHTML = `<hr id="${id}" />`;
-            } else if (comp.type === 'input') {
-                elementHTML = `<input id="${id}" type="text" placeholder="${content}" />`;
-            } else {
-                elementHTML = `<${tag} id="${id}">${content}</${tag}>`;
-            }
-
-            if (comp.link) {
-                return `<a href="${comp.link}" style="text-decoration:none">${elementHTML}</a>`;
-            }
-            return elementHTML;
-        };
-
-        const pageStyle = page.style || {};
-        const bgStyleStr = Object.entries(pageStyle)
-            .filter(([k]) => ['backgroundImage', 'backgroundSize', 'backgroundPosition', 'backgroundRepeat', 'background'].includes(k))
-            .map(([k, v]) => {
-                if (k === 'backgroundImage' && v) return `background-image: url('${v}')`;
-                return `${k.replace(/[A-Z]/g, m => "-" + m.toLowerCase())}:${v}`;
-            })
-            .join('; ');
-
-        const componentsHTML = page.components.map(generateComponentHTML).join('\n        ');
-
-        const fullHTML = `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${page.name}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Open+Sans:wght@400;700&family=Montserrat:wght@400;700&family=Playfair+Display:wght@700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        body { margin: 0; padding: 0; font-family: 'Roboto', sans-serif; overflow-x: hidden; }
-        .canvas { 
-            position: relative; 
-            width: 100%; 
-            min-height: 100vh; 
-            ${bgStyleStr} 
-        }
-        * { box-sizing: border-box; }
-        
-        /* Base Component Styles */
-        ${stylesBlock}
-        
-        /* Tablet Breakpoint (768px) */
-        @media (max-width: 768px) {
-            ${tabletStylesBlock}
-        }
-        
-        /* Mobile Breakpoint (480px) */
-        @media (max-width: 480px) {
-            ${mobileStylesBlock}
-        }
-    </style>
-</head>
-<body>
-    <div class="canvas">
-        ${componentsHTML}
-    </div>
-</body>
-</html>`;
-
-        const blob = new Blob([fullHTML], { type: 'text/html' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${page.name.toLowerCase()}.html`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-    };
-
-    const handleExportJSON = () => {
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(pages, null, 2));
-        const a = document.createElement('a');
-        a.setAttribute("href", dataStr);
-        a.setAttribute("download", "project.json");
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
+        handleSaveAsTemplate();
     };
 
     const duplicateComponent = (id) => {
@@ -1205,7 +639,7 @@ const Editor = ({ onNavigateAbout }) => {
                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                     {!previewMode && (
                         <>
-                            <button onClick={handleSaveAsTemplate} className={`${styles.btn} ${styles['btn-success']}`}>Save as Template</button>
+                            <button onClick={openSaveTemplateModal} className={`${styles.btn} ${styles['btn-success']}`}>Save as Template</button>
                             <button onClick={() => setShowGallery(true)} className={`${styles.btn} ${styles['btn-primary']}`}><i className="fas fa-layer-group" style={{ marginRight: '6px' }} />Templates</button>
                             <button onClick={undo} disabled={history.length === 0} className={`${styles.btn} ${styles['btn-warning']}`}>Undo</button>
                             <button onClick={redo} disabled={future.length === 0} className={`${styles.btn} ${styles['btn-warning']}`}>Redo</button>
@@ -2039,153 +1473,44 @@ const Editor = ({ onNavigateAbout }) => {
                 )}
             </div>
 
-            {/* Save Template Modal */}
+
+            {/* Modals */}
             {showSaveModal && (
-                <div className={styles['modal-overlay']}>
-                    <div className={styles['modal-content']}>
-                        <h3>Save as Template</h3>
-                        <div className={styles['form-group']}>
-                            <label className={styles['form-label']}>Template Name</label>
-                            <input
-                                type="text"
-                                value={tempTemplateName}
-                                onChange={(e) => setTempTemplateName(e.target.value)}
-                                placeholder="e.g. My Cool Portfolio"
-                                className={styles['form-control']}
-                                autoFocus
-                            />
-                        </div>
-                        <div className={`${styles.flex} ${styles['gap-10']} ${styles['mt-20']}`}>
-                            <button
-                                onClick={confirmSaveTemplate}
-                                className={`${styles.btn} ${styles['btn-primary']} ${styles['w-100']}`}
-                            >
-                                Save Template
-                            </button>
-                            <button
-                                onClick={() => setShowSaveModal(false)}
-                                className={`${styles.btn} ${styles['btn-secondary']} ${styles['w-100']}`}
-                            >
-                                Cancel
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                <SaveTemplateModal
+                    tempTemplateName={tempTemplateName}
+                    setTempTemplateName={setTempTemplateName}
+                    onSave={confirmSaveTemplate}
+                    onClose={() => setShowSaveModal(false)}
+                />
             )}
 
-            {/* Add Page Modal */}
             {showAddPageModal && (
-                <div className={styles['modal-overlay']} onClick={() => setShowAddPageModal(false)}>
-                    <div className={styles['modal-content']} onClick={e => e.stopPropagation()}>
-                        <h3 style={{ marginBottom: '16px', fontSize: '1rem', color: 'var(--text-main)' }}>
-                            <i className="fas fa-file-alt" style={{ marginRight: '8px', color: '#10b981' }} />
-                            Add New Page
-                        </h3>
-                        <div className={styles['form-group']}>
-                            <label className={styles['form-label']}>Page Name</label>
-                            <input
-                                type="text"
-                                value={newPageName}
-                                onChange={(e) => setNewPageName(e.target.value)}
-                                onKeyDown={(e) => { if (e.key === 'Enter') addPage(); if (e.key === 'Escape') setShowAddPageModal(false); }}
-                                placeholder="e.g. About, Contact, Portfolio"
-                                className={styles['form-control']}
-                                autoFocus
-                            />
-                        </div>
-                        <div className={`${styles.flex} ${styles['gap-10']} ${styles['mt-20']}`}>
-                            <button
-                                onClick={addPage}
-                                disabled={!newPageName.trim()}
-                                className={`${styles.btn} ${styles['btn-primary']} ${styles['w-100']}`}
-                                style={{ background: !newPageName.trim() ? undefined : 'linear-gradient(135deg, #10b981, #059669)', opacity: newPageName.trim() ? 1 : 0.5 }}
-                            >
-                                <i className="fas fa-plus" style={{ marginRight: '6px' }} />
-                                Create Page
-                            </button>
-                            <button
-                                onClick={() => setShowAddPageModal(false)}
-                                className={`${styles.btn} ${styles['btn-secondary']} ${styles['w-100']}`}
-                            >
-                                Cancel
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                <AddPageModal
+                    newPageName={newPageName}
+                    setNewPageName={setNewPageName}
+                    onAdd={addPage}
+                    onClose={() => setShowAddPageModal(false)}
+                />
             )}
 
-            {/* Rename Page Modal */}
             {editingPage && (
-                <div className={styles['modal-overlay']} onClick={() => setEditingPage(null)}>
-                    <div className={styles['modal-content']} onClick={e => e.stopPropagation()}>
-                        <h3 style={{ marginBottom: '16px', fontSize: '1rem', color: 'var(--text-main)' }}>
-                            <i className="fas fa-pencil-alt" style={{ marginRight: '8px', color: '#6366f1' }} />
-                            Rename Page
-                        </h3>
-                        <div className={styles['form-group']}>
-                            <label className={styles['form-label']}>New Page Name</label>
-                            <input
-                                type="text"
-                                value={editPageName}
-                                onChange={(e) => setEditPageName(e.target.value)}
-                                onKeyDown={(e) => { if (e.key === 'Enter') renamePage(); if (e.key === 'Escape') setEditingPage(null); }}
-                                className={styles['form-control']}
-                                autoFocus
-                            />
-                        </div>
-                        <div className={`${styles.flex} ${styles['gap-10']} ${styles['mt-20']}`}>
-                            <button
-                                onClick={renamePage}
-                                disabled={!editPageName.trim()}
-                                className={`${styles.btn} ${styles['btn-primary']} ${styles['w-100']}`}
-                                style={{ opacity: editPageName.trim() ? 1 : 0.5 }}
-                            >
-                                <i className="fas fa-check" style={{ marginRight: '6px' }} />
-                                Save Name
-                            </button>
-                            <button
-                                onClick={() => setEditingPage(null)}
-                                className={`${styles.btn} ${styles['btn-secondary']} ${styles['w-100']}`}
-                            >
-                                Cancel
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                <RenamePageModal
+                    editPageName={editPageName}
+                    setEditPageName={setEditPageName}
+                    onRename={renamePage}
+                    onClose={() => setEditingPage(null)}
+                />
             )}
 
-            {/* Delete Page Confirmation Modal */}
             {deletingPage && (
-                <div className={styles['modal-overlay']} onClick={() => setDeletingPage(null)}>
-                    <div className={styles['modal-content']} onClick={e => e.stopPropagation()} style={{ maxWidth: '380px' }}>
-                        <div style={{ textAlign: 'center', marginBottom: '16px' }}>
-                            <div style={{ width: '48px', height: '48px', background: 'rgba(239,68,68,0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px', fontSize: '20px', color: '#ef4444' }}>
-                                <i className="fas fa-trash-alt" />
-                            </div>
-                            <h3 style={{ fontSize: '1rem', color: 'var(--text-main)', marginBottom: '6px' }}>Delete Page</h3>
-                            <p style={{ fontSize: '0.85rem', color: '#64748b', margin: 0 }}>
-                                Are you sure you want to delete <strong>"{deletingPage.name}"</strong>? This cannot be undone.
-                            </p>
-                        </div>
-                        <div className={`${styles.flex} ${styles['gap-10']} ${styles['mt-20']}`}>
-                            <button
-                                onClick={() => deletePage(deletingPage.id)}
-                                className={`${styles.btn} ${styles['w-100']}`}
-                                style={{ background: 'linear-gradient(135deg, #ef4444, #dc2626)', color: 'white', border: 'none' }}
-                            >
-                                <i className="fas fa-trash-alt" style={{ marginRight: '6px' }} />
-                                Delete
-                            </button>
-                            <button
-                                onClick={() => setDeletingPage(null)}
-                                className={`${styles.btn} ${styles['btn-secondary']} ${styles['w-100']}`}
-                            >
-                                Cancel
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                <DeletePageModal
+                    page={deletingPage}
+                    onConfirm={deletePage}
+                    onClose={() => setDeletingPage(null)}
+                />
             )}
+
+
 
             {/* Professional Template Gallery */}
             {showGallery && (
