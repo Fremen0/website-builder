@@ -15,6 +15,7 @@ import TemplateGallery from '../TemplateGallery/TemplateGallery';
 import getElementDefaults from '../../constants/elementDefaults';
 import FONT_FAMILIES from '../../constants/fontFamilies';
 import UserMenu from './components/UserMenu';
+import PropertiesPanel from './components/PropertiesPanel';
 import SaveTemplateModal from './modals/SaveTemplateModal';
 import AddPageModal from './modals/AddPageModal';
 import RenamePageModal from './modals/RenamePageModal';
@@ -941,10 +942,34 @@ const Editor = ({ onNavigateAbout }) => {
 
                 {/* Properties Panel */}
                 {!previewMode && showPropertiesPanel && (
-                    <div className={styles['properties-panel']}>
-                        <h3>Properties</h3>
-                        {selectedComponent ? (
-                            <div style={{ marginTop: '20px' }}>
+                    <PropertiesPanel
+                        selectedComponent={selectedComponent}
+                        onStyleChange={updateComponentStyle}
+                        onStylesChange={updateComponentStyles}
+                        onContentChange={updateComponentContent}
+                        onLinkChange={updateComponentLink}
+                        onDelete={deleteComponent}
+                        onDuplicate={duplicateComponent}
+                        onAlign={alignComponent}
+                        onReorder={reorderComponent}
+                        activeState={activeState}
+                        setActiveState={setActiveState}
+                        openCategories={openCategories}
+                        toggleCategory={toggleCategory}
+                        viewMode={viewMode}
+                        activePage={activePage}
+                        backgroundImage={backgroundImage}
+                        setBackgroundImage={setBackgroundImage}
+                        backgroundSize={backgroundSize}
+                        setBackgroundSize={setBackgroundSize}
+                        backgroundPosition={backgroundPosition}
+                        setBackgroundPosition={setBackgroundPosition}
+                        backgroundRepeat={backgroundRepeat}
+                        setBackgroundRepeat={setBackgroundRepeat}
+                        updatePageStyle={updatePageStyle}
+                        handlePageBackgroundUpload={handlePageBackgroundUpload}
+                    />
+                )}
 
                                 {selectedComponent.type === 'video' && (
                                     <div style={{ marginBottom: '15px' }}>
