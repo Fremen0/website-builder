@@ -5,17 +5,27 @@ import useExport from './hooks/useExport';
 import { useDrop } from 'react-dnd';
 import axios from 'axios';
 
-import SidebarItem from './SidebarItem';
+/**
+ * Editor.js
+ * 
+ * The main orchestrator component for the application frontend engine.
+ * 
+ * Core responsibilities:
+ * - Bootstrapping and managing the React-DnD context for drag-and-drop mechanics.
+ * - Integrating custom Data Hooks (`useHistory`, `usePageManager`, `useExport`) into a unified canvas state.
+ * - Processing complex UI interactions and propagating changes safely through the data model.
+ * - Communicating with the backend API (`axios`) to perform auto-saves, template syncs, and data fetching.
+ */
+
 import CanvasItem from './CanvasItem';
 import styles from './Editor.module.css';
-import { PREBUILT_SECTIONS } from '../../data/templates';
 import TemplateGallery from '../TemplateGallery/TemplateGallery';
 
 // ── Extracted pieces ────────────────────────────────────────────────────────
 import getElementDefaults from '../../constants/elementDefaults';
-import FONT_FAMILIES from '../../constants/fontFamilies';
-import UserMenu from './components/UserMenu';
 import PropertiesPanel from './components/PropertiesPanel';
+import EditorHeader from './components/EditorHeader';
+import Sidebar from './components/Sidebar';
 import SaveTemplateModal from './modals/SaveTemplateModal';
 import AddPageModal from './modals/AddPageModal';
 import RenamePageModal from './modals/RenamePageModal';
@@ -181,11 +191,13 @@ const Editor = ({ onNavigateAbout }) => {
         if (!isLoaded) return;
 
         // Prevent saving immediately after loading the project
+        // This prevents the initial fetch from incorrectly triggering an overwrite.
         if (isFirstLoad.current) {
             isFirstLoad.current = false;
             return;
         }
 
+        // Auto-save function: Continously syncs the user's progress with the backend
         const saveProject = async () => {
             // setSaving(true);
             const projectData = {
@@ -213,6 +225,9 @@ const Editor = ({ onNavigateAbout }) => {
         return () => clearTimeout(debounceTimer);
     }, [pages, activePageId, isLoaded, projectId]);
 
+    // Function triggered upon dropping a new component onto the canvas or inserting one.
+    // It captures the default element settings, assigns absolute positioning relative to drop coordinates,
+    // and seeds empty objects for responsive and stateful specific styles.
     const addComponentToCanvas = (item, x, y) => {
         saveHistory();
 
@@ -273,9 +288,12 @@ const Editor = ({ onNavigateAbout }) => {
         setComponents(prev => [...prev, ...newComponents]);
     };
 
+    // react-dnd (Drag and Drop) Hook setup for the main canvas area.
     const [{ isOver }, drop] = useDrop(() => ({
         accept: [ItemTypes.SIDEBAR_ITEM],
         hover: (item, monitor) => {
+            // Continously evaluates drag movements over the canvas.
+            // When dragged near the center of the canvas horizontally, it triggers a snapping guide.
             if (!canvasRef.current) return;
             const canvasRect = canvasRef.current.getBoundingClientRect();
             const clientOffset = monitor.getClientOffset();
@@ -297,6 +315,8 @@ const Editor = ({ onNavigateAbout }) => {
             const clientOffset = monitor.getClientOffset();
             if (!clientOffset) return;
 
+            // Calculates the precise relative X/Y drop coordinates. 
+            // Accounts for canvas scrolling position and inner borders to correct cursor alignment.
             const scrollLeft = canvasRef.current.scrollLeft || 0;
             const scrollTop = canvasRef.current.scrollTop || 0;
             const borderLeft = canvasRef.current.clientLeft || 0;
@@ -351,6 +371,10 @@ const Editor = ({ onNavigateAbout }) => {
         );
     };
 
+    // Generic action to modify a specific styling property for a given component.
+    // This dynamically tracks which "View Mode" (desktop, mobile, tablet) and 
+    // which "State Mode" (normal, hover, active) the user is currently editing, 
+    // ensuring the style updates are nested within the correct responsive breakpoint or pseudo-class logic.
     const updateComponentStyle = (id, property, value) => {
         saveHistory();
         setComponents((prev) =>
@@ -635,257 +659,46 @@ const Editor = ({ onNavigateAbout }) => {
 
     return (
         <div className={styles['editor-container']}>
-            <div className={styles['editor-header']}>
-                <h3>TWB — Template Website Builder</h3>
-                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                    {!previewMode && (
-                        <>
-                            <button onClick={openSaveTemplateModal} className={`${styles.btn} ${styles['btn-success']}`}>Save as Template</button>
-                            <button onClick={() => setShowGallery(true)} className={`${styles.btn} ${styles['btn-primary']}`}><i className="fas fa-layer-group" style={{ marginRight: '6px' }} />Templates</button>
-                            <button onClick={undo} disabled={history.length === 0} className={`${styles.btn} ${styles['btn-warning']}`}>Undo</button>
-                            <button onClick={redo} disabled={future.length === 0} className={`${styles.btn} ${styles['btn-warning']}`}>Redo</button>
-                            <button onClick={handleExportHTML} className={`${styles.btn} ${styles['btn-primary']}`}>Export HTML</button>
-                            <button onClick={handleExportJSON} className={`${styles.btn} ${styles['btn-secondary']}`}>Export JSON</button>
-                            <button onClick={clearCanvas} className={`${styles.btn} ${styles['btn-danger']}`}>Clear All</button>
-                        </>
-                    )}
-                    <div className={styles['view-mode-toggle']} style={{ marginLeft: '10px' }}>
-                        <button onClick={() => setViewMode('desktop')} className={viewMode === 'desktop' ? styles.active : ''} title="Desktop View"><i className="fas fa-desktop"></i></button>
-                        <button onClick={() => setViewMode('tablet')} className={viewMode === 'tablet' ? styles.active : ''} title="Tablet View"><i className="fas fa-tablet-alt"></i></button>
-                        <button onClick={() => setViewMode('mobile')} className={viewMode === 'mobile' ? styles.active : ''} title="Mobile View"><i className="fas fa-mobile-alt"></i></button>
-                    </div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <button
-                        onClick={() => setPreviewMode(!previewMode)}
-                        className={`${styles.btn} ${previewMode ? styles['btn-primary'] : styles['btn-success']}`}
-                    >
-                        {previewMode ? 'Edit Mode' : 'Preview Mode'}
-                    </button>
-                    {!previewMode && (
-                        <button
-                            onClick={() => setShowPropertiesPanel(!showPropertiesPanel)}
-                            className={`${styles.btn} ${showPropertiesPanel ? styles['btn-secondary'] : styles['btn-primary']}`}
-                            title="Toggle Properties Panel"
-                        >
-                            <i className="fas fa-sliders-h"></i>
-                        </button>
-                    )}
-                    {/* About Developer Button */}
-                    {onNavigateAbout && (
-                        <button
-                            id="about-dev-btn"
-                            onClick={onNavigateAbout}
-                            title="About the Developer"
-                            style={{
-                                display: 'flex', alignItems: 'center', gap: '7px',
-                                background: 'linear-gradient(135deg, rgba(99,102,241,0.12), rgba(236,72,153,0.12))',
-                                border: '1px solid rgba(99, 102, 241, 0.25)',
-                                borderRadius: '12px', padding: '8px 14px', cursor: 'pointer',
-                                color: '#6366f1', fontSize: '0.85rem', fontWeight: '600',
-                                transition: 'all 0.25s', fontFamily: 'inherit'
-                            }}
-                            onMouseEnter={e => {
-                                e.currentTarget.style.background = 'linear-gradient(135deg, #6366f1, #ec4899)';
-                                e.currentTarget.style.color = 'white';
-                                e.currentTarget.style.borderColor = 'transparent';
-                                e.currentTarget.style.transform = 'translateY(-1px)';
-                                e.currentTarget.style.boxShadow = '0 6px 16px rgba(99,102,241,0.3)';
-                            }}
-                            onMouseLeave={e => {
-                                e.currentTarget.style.background = 'linear-gradient(135deg, rgba(99,102,241,0.12), rgba(236,72,153,0.12))';
-                                e.currentTarget.style.color = '#6366f1';
-                                e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.25)';
-                                e.currentTarget.style.transform = 'translateY(0)';
-                                e.currentTarget.style.boxShadow = 'none';
-                            }}
-                        >
-                            <i className="fas fa-user-circle" />
-                            About
-                        </button>
-                    )}
-                    {/* User info + Logout */}
-                    <UserMenu />
-                </div>
-            </div>
+            <EditorHeader
+                previewMode={previewMode}
+                setPreviewMode={setPreviewMode}
+                openSaveTemplateModal={openSaveTemplateModal}
+                setShowGallery={setShowGallery}
+                historyLength={history.length}
+                futureLength={future.length}
+                undo={undo}
+                redo={redo}
+                handleExportHTML={handleExportHTML}
+                handleExportJSON={handleExportJSON}
+                clearCanvas={clearCanvas}
+                viewMode={viewMode}
+                setViewMode={setViewMode}
+                showPropertiesPanel={showPropertiesPanel}
+                setShowPropertiesPanel={setShowPropertiesPanel}
+                onNavigateAbout={onNavigateAbout}
+            />
 
             <div className={`${styles['editor-layout']} ${previewMode ? styles.center : ''}`}>
                 {/* Sidebar Tools */}
                 {!previewMode && (
-                    <div className={styles.sidebar}>
-                        <div className={styles['prop-category']} style={{ background: 'transparent', border: 'none', boxShadow: 'none', marginBottom: '4px' }}>
-                            <div className={`${styles['prop-header']} ${openToolCategories.layout ? styles.open : ''}`} onClick={() => toggleToolCategory('layout')} style={{ paddingLeft: 0, paddingRight: 0 }}>
-                                <span style={{ fontSize: '0.85rem', color: 'var(--text-main)' }}><i className="fas fa-layer-group" style={{ marginRight: '6px' }}></i> Layout</span>
-                                <i className="fas fa-chevron-down"></i>
-                            </div>
-                            {openToolCategories.layout && (
-                                <div className={styles['sidebar-tools-grid']} style={{ paddingTop: '10px' }}>
-                                    <SidebarItem type="section" label="Section" icon="fas fa-layer-group" />
-                                    <SidebarItem type="div" label="Div Block" icon="fas fa-box" />
-                                    <SidebarItem type="grid" label="Grid Layout" icon="fas fa-th" />
-                                    <SidebarItem type="navbar" label="Navigation Bar" icon="fas fa-bars" />
-                                    <SidebarItem type="form" label="Form Block" icon="fas fa-list-alt" />
-                                </div>
-                            )}
-                        </div>
-
-                        <div className={styles['prop-category']} style={{ background: 'transparent', border: 'none', boxShadow: 'none', marginBottom: '4px' }}>
-                            <div className={`${styles['prop-header']} ${openToolCategories.basic ? styles.open : ''}`} onClick={() => toggleToolCategory('basic')} style={{ paddingLeft: 0, paddingRight: 0 }}>
-                                <span style={{ fontSize: '0.85rem', color: 'var(--text-main)' }}><i className="fas fa-font" style={{ marginRight: '6px' }}></i> Basic Elements</span>
-                                <i className="fas fa-chevron-down"></i>
-                            </div>
-                            {openToolCategories.basic && (
-                                <div className={styles['sidebar-tools-grid']} style={{ paddingTop: '10px' }}>
-                                    <SidebarItem type="text" label="Text" icon="fas fa-paragraph" />
-                                    <SidebarItem type="heading" label="Heading" icon="fas fa-heading" />
-                                    <SidebarItem type="button" label="Button" icon="fas fa-square" />
-                                    <SidebarItem type="image" label="Image" icon="fas fa-image" />
-                                    <SidebarItem type="divider" label="Divider" icon="fas fa-minus" />
-                                    <SidebarItem type="input" label="Input" icon="fas fa-i-cursor" />
-                                </div>
-                            )}
-                        </div>
-
-                        <div className={styles['prop-category']} style={{ background: 'transparent', border: 'none', boxShadow: 'none', marginBottom: '4px' }}>
-                            <div className={`${styles['prop-header']} ${openToolCategories.media ? styles.open : ''}`} onClick={() => toggleToolCategory('media')} style={{ paddingLeft: 0, paddingRight: 0 }}>
-                                <span style={{ fontSize: '0.85rem', color: 'var(--text-main)' }}><i className="fas fa-photo-video" style={{ marginRight: '6px' }}></i> Media & Interactive</span>
-                                <i className="fas fa-chevron-down"></i>
-                            </div>
-                            {openToolCategories.media && (
-                                <div className={styles['sidebar-tools-grid']} style={{ paddingTop: '10px' }}>
-                                    <SidebarItem type="video" label="Video" icon="fas fa-video" />
-                                    <SidebarItem type="audio" label="Audio File" icon="fas fa-music" />
-                                    <SidebarItem type="iframe" label="Embed Code" icon="fas fa-code" />
-                                    <SidebarItem type="slider" label="Image Slider" icon="fas fa-images" />
-                                    <SidebarItem type="map" label="Google Maps" icon="fas fa-map-marker-alt" />
-                                    <SidebarItem type="icon" label="Icon" icon="fas fa-star" />
-                                </div>
-                            )}
-                        </div>
-
-                        <div className={styles['prop-category']} style={{ background: 'transparent', border: 'none', boxShadow: 'none', marginBottom: '4px' }}>
-                            <div className={`${styles['prop-header']} ${openToolCategories.sections ? styles.open : ''}`} onClick={() => toggleToolCategory('sections')} style={{ paddingLeft: 0, paddingRight: 0 }}>
-                                <span style={{ fontSize: '0.85rem', color: 'var(--text-main)' }}><i className="fas fa-puzzle-piece" style={{ marginRight: '6px' }}></i> Prebuilt Sections</span>
-                                <i className="fas fa-chevron-down"></i>
-                            </div>
-                            {openToolCategories.sections && (
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '8px', paddingTop: '10px' }}>
-                                    {PREBUILT_SECTIONS.map(section => (
-                                        <div
-                                            key={section.id}
-                                            className={styles['sidebar-item']}
-                                            onClick={() => addSectionToCanvas(section)}
-                                            style={{ justifyContent: 'flex-start' }}
-                                        >
-                                            <i className={`${section.icon}`} style={{ marginRight: '10px', width: '16px' }}></i>
-                                            <span>{section.name}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className={styles['prop-category']} style={{ background: 'transparent', border: 'none', boxShadow: 'none', marginBottom: '4px' }}>
-                            <div className={`${styles['prop-header']} ${openToolCategories.pages ? styles.open : ''}`} onClick={() => toggleToolCategory('pages')} style={{ paddingLeft: 0, paddingRight: 0 }}>
-                                <span style={{ fontSize: '0.85rem', color: 'var(--text-main)' }}><i className="fas fa-file-alt" style={{ marginRight: '6px' }}></i> Pages</span>
-                                <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <button
-                                        onClick={(e) => { e.stopPropagation(); setNewPageName(''); setShowAddPageModal(true); }}
-                                        title="Add Page"
-                                        style={{ fontSize: '11px', padding: '3px 7px', background: 'rgba(16, 185, 129, 0.12)', color: '#10b981', borderRadius: '4px', cursor: 'pointer', border: 'none', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '3px' }}
-                                    >
-                                        <i className="fas fa-plus" />
-                                    </button>
-                                    <i className="fas fa-chevron-down"></i>
-                                </div>
-                            </div>
-                            {openToolCategories.pages && (
-                                <div className={styles['pages-list']} style={{ paddingTop: '10px' }}>
-                                {pages.map(page => (
-                                        <div
-                                            key={page.id}
-                                            onClick={() => switchPage(page.id)}
-                                            className={`${styles['page-item']} ${activePageId === page.id ? styles.active : ''}`}
-                                        >
-                                            <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{page.name}</span>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}>
-                                                {/* Edit button */}
-                                                <button
-                                                    onClick={(e) => { e.stopPropagation(); setEditingPage(page); setEditPageName(page.name); }}
-                                                    title="Rename Page"
-                                                    style={{ background: 'rgba(99,102,241,0.12)', border: 'none', color: '#6366f1', borderRadius: '4px', width: '22px', height: '22px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px' }}
-                                                >
-                                                    <i className="fas fa-pencil-alt" />
-                                                </button>
-                                                {/* Delete button — hidden for last page */}
-                                                {pages.length > 1 && (
-                                                    <button
-                                                        onClick={(e) => { e.stopPropagation(); setDeletingPage(page); }}
-                                                        title="Delete Page"
-                                                        style={{ background: 'rgba(239,68,68,0.1)', border: 'none', color: '#ef4444', borderRadius: '4px', width: '22px', height: '22px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px' }}
-                                                    >
-                                                        <i className="fas fa-trash-alt" />
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-
-                        <div className={styles['prop-category']} style={{ background: 'transparent', border: 'none', boxShadow: 'none', marginBottom: '4px' }}>
-                            <div className={`${styles['prop-header']} ${openToolCategories.navigator ? styles.open : ''}`} onClick={() => toggleToolCategory('navigator')} style={{ paddingLeft: 0, paddingRight: 0 }}>
-                                <span style={{ fontSize: '0.85rem', color: 'var(--text-main)' }}><i className="fas fa-sitemap" style={{ marginRight: '6px' }}></i> Navigator</span>
-                                <i className="fas fa-chevron-down"></i>
-                            </div>
-                            {openToolCategories.navigator && (
-                                <div className={styles['pages-list']} style={{ paddingTop: '10px' }}>
-                                    {components.length === 0 ? (
-                                        <div style={{ padding: '10px', fontSize: '0.8rem', color: '#94a3b8', fontStyle: 'italic' }}>No elements yet</div>
-                                ) : (
-                                    components.slice().reverse().map(comp => (
-                                        <div
-                                            key={comp.id}
-                                            onClick={() => setSelectedId(comp.id)}
-                                            className={`${styles['page-item']} ${selectedId === comp.id ? styles.active : ''}`}
-                                            style={{ fontSize: '0.85rem' }}
-                                        >
-                                            <i className={
-                                                comp.type === 'heading' ? 'fas fa-heading' :
-                                                    comp.type === 'image' ? 'fas fa-image' :
-                                                        comp.type === 'video' ? 'fas fa-video' :
-                                                            comp.type === 'button' ? 'fas fa-square' :
-                                                                comp.type === 'input' ? 'fas fa-i-cursor' :
-                                                                    comp.type === 'section' ? 'fas fa-layer-group' :
-                                                                        comp.type === 'div' ? 'fas fa-box' :
-                                                                            comp.type === 'divider' ? 'fas fa-minus' : 'fas fa-font'
-                                            } style={{ marginRight: '8px', width: '15px', color: 'var(--primary-color)', opacity: 0.8 }}></i>
-                                            <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1, marginRight: '8px' }}>
-                                                {comp.content || comp.type}
-                                            </span>
-                                            
-                                            {/* Position Mode Indicator */}
-                                            <div style={{ marginRight: '8px', opacity: 0.6 }}>
-                                                {comp.style?.position === 'absolute' ? (
-                                                    <i className="fas fa-thumbtack" style={{ fontSize: '10px', color: '#818cf8' }} title="Pinned (Absolute)"></i>
-                                                ) : (
-                                                    <i className="fas fa-stream" style={{ fontSize: '10px', color: '#10b981' }} title="Flow (Relative)"></i>
-                                                )}
-                                            </div>
-
-                                            <div style={{ display: 'flex', gap: '4px', opacity: selectedId === comp.id ? 1 : 0.4 }}>
-                                                <i className="fas fa-chevron-up" onClick={(e) => { e.stopPropagation(); reorderComponent(comp.id, 'up'); }} style={{ fontSize: '10px', cursor: 'pointer' }} title="Bring Forward"></i>
-                                                <i className="fas fa-chevron-down" onClick={(e) => { e.stopPropagation(); reorderComponent(comp.id, 'down'); }} style={{ fontSize: '10px', cursor: 'pointer' }} title="Send Backward"></i>
-                                                <i className="fas fa-trash" onClick={(e) => { e.stopPropagation(); deleteComponent(comp.id); }} style={{ fontSize: '10px', cursor: 'pointer', color: '#ef4444' }}></i>
-                                            </div>
-                                        </div>
-                                    ))
-                                )}
-                                </div>
-                            )}
-                        </div>
-                    </div>
+                    <Sidebar
+                        openToolCategories={openToolCategories}
+                        toggleToolCategory={toggleToolCategory}
+                        addSectionToCanvas={addSectionToCanvas}
+                        pages={pages}
+                        activePageId={activePageId}
+                        switchPage={switchPage}
+                        setNewPageName={setNewPageName}
+                        setShowAddPageModal={setShowAddPageModal}
+                        setEditingPage={setEditingPage}
+                        setEditPageName={setEditPageName}
+                        setDeletingPage={setDeletingPage}
+                        components={components}
+                        selectedId={selectedId}
+                        setSelectedId={setSelectedId}
+                        reorderComponent={reorderComponent}
+                        deleteComponent={deleteComponent}
+                    />
                 )}
 
                 {/* Workspace (Canvas) */}
@@ -970,534 +783,7 @@ const Editor = ({ onNavigateAbout }) => {
                         handlePageBackgroundUpload={handlePageBackgroundUpload}
                     />
                 )}
-
-                                {selectedComponent.type === 'video' && (
-                                    <div style={{ marginBottom: '15px' }}>
-                                        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Video URL (Embed)</label>
-                                        <input type="text" value={selectedComponent.content} onChange={(e) => updateComponentContent(selectedComponent.id, e.target.value)} style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px' }} />
-                                    </div>
-                                )}
-                                <div className={styles['form-group']} style={{ marginBottom: '24px' }}>
-                                    <label className={styles['form-label']}>EDITING STATE</label>
-                                    <div className={styles['view-mode-toggle']}>
-                                        <button onClick={() => setActiveState('normal')} className={activeState === 'normal' ? styles.active : ''}>Normal</button>
-                                        <button onClick={() => setActiveState('hover')} className={activeState === 'hover' ? styles.active : ''}>Hover</button>
-                                        <button onClick={() => setActiveState('active')} className={activeState === 'active' ? styles.active : ''}>Active</button>
-                                    </div>
-                                    {activeState !== 'normal' && (
-                                        <div style={{ fontSize: '0.75rem', color: '#818cf8', marginTop: '8px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                            <i className="fas fa-info-circle"></i> Mode: {activeState.toUpperCase()}
-                                        </div>
-                                    )}
-                                </div>
-                                <h3>Inspector</h3>
-
-                                <div className={styles['prop-category']}>
-                                    <div className={`${styles['prop-header']} ${openCategories.content ? styles.open : ''}`} onClick={() => toggleCategory('content')}>
-                                        <span><i className="fas fa-edit"></i> CONTENT</span>
-                                        <i className="fas fa-chevron-down"></i>
-                                    </div>
-                                    {openCategories.content && (
-                                        <div className={styles['prop-content']}>
-                                            <div className={styles['form-group']}>
-                                                <label className={styles['form-label']}>{selectedComponent.type === 'input' ? 'Placeholder Text' : 'Content'}</label>
-                                                <input
-                                                    type="text"
-                                                    value={selectedComponent.content}
-                                                    onChange={(e) => updateComponentContent(selectedComponent.id, e.target.value)}
-                                                    className={styles['form-control']}
-                                                />
-                                            </div>
-                                            {(selectedComponent.type === 'text' || selectedComponent.type === 'heading' || selectedComponent.type === 'button' || selectedComponent.type === 'image') && (
-                                                <div className={styles['form-group']}>
-                                                    <label className={styles['form-label']}>Link URL</label>
-                                                    <input
-                                                        type="text"
-                                                        value={selectedComponent.link || ''}
-                                                        onChange={(e) => updateComponentLink(selectedComponent.id, e.target.value)}
-                                                        placeholder="https://"
-                                                        className={styles['form-control']}
-                                                    />
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className={styles['prop-category']}>
-                                    <div className={`${styles['prop-header']} ${openCategories.typography ? styles.open : ''}`} onClick={() => toggleCategory('typography')}>
-                                        <span><i className="fas fa-font"></i> TYPOGRAPHY</span>
-                                        <i className="fas fa-chevron-down"></i>
-                                    </div>
-                                    {openCategories.typography && (
-                                        <div className={styles['prop-content']}>
-                                            <div className={styles['form-group']}>
-                                                <label className={styles['form-label']}>Font Family</label>
-                                                <select
-                                                    value={selectedComponent.style?.fontFamily || 'Arial, sans-serif'}
-                                                    onChange={(e) => updateComponentStyle(selectedComponent.id, 'fontFamily', e.target.value)}
-                                                    className={styles['form-control']}
-                                                >
-                                                    {FONT_FAMILIES.map(font => (
-                                                        <option key={font} value={font}>{font.split(',')[0].replace(/'/g, '')}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                            <div className={styles.flex} style={{ gap: '10px' }}>
-                                                <div className={styles['form-group']} style={{ flex: 1 }}>
-                                                    <label className={styles['form-label']}>Size</label>
-                                                    <input type="number" value={parseInt(selectedComponent.style?.fontSize) || 16} onChange={(e) => updateComponentStyle(selectedComponent.id, 'fontSize', `${e.target.value}px`)} className={styles['form-control']} />
-                                                </div>
-                                                <div className={styles['form-group']} style={{ flex: 1 }}>
-                                                    <label className={styles['form-label']}>Weight</label>
-                                                    <select value={selectedComponent.style?.fontWeight || '400'} onChange={(e) => updateComponentStyle(selectedComponent.id, 'fontWeight', e.target.value)} className={styles['form-control']}>
-                                                        <option value="300">Light</option>
-                                                        <option value="400">Normal</option>
-                                                        <option value="600">Semi</option>
-                                                        <option value="700">Bold</option>
-                                                        <option value="900">Black</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div className={styles.flex} style={{ gap: '10px' }}>
-                                                <div className={styles['form-group']} style={{ flex: 1 }}>
-                                                    <label className={styles['form-label']}>Line H</label>
-                                                    <input type="number" step="0.1" value={parseFloat(selectedComponent.style?.lineHeight) || 1.5} onChange={(e) => updateComponentStyle(selectedComponent.id, 'lineHeight', e.target.value)} className={styles['form-control']} />
-                                                </div>
-                                                <div className={styles['form-group']} style={{ flex: 1 }}>
-                                                    <label className={styles['form-label']}>Spacing</label>
-                                                    <input type="number" step="1" value={parseInt(selectedComponent.style?.letterSpacing) || 0} onChange={(e) => updateComponentStyle(selectedComponent.id, 'letterSpacing', `${e.target.value}px`)} className={styles['form-control']} />
-                                                </div>
-                                            </div>
-                                            <div className={styles['form-group']}>
-                                                <label className={styles['form-label']}>Transform</label>
-                                                <div className={styles['button-group']}>
-                                                    <button onClick={() => updateComponentStyle(selectedComponent.id, 'textTransform', 'none')} className={selectedComponent.style?.textTransform === 'none' || !selectedComponent.style?.textTransform ? styles.active : ''}>None</button>
-                                                    <button onClick={() => updateComponentStyle(selectedComponent.id, 'textTransform', 'uppercase')} className={selectedComponent.style?.textTransform === 'uppercase' ? styles.active : ''}>ABC</button>
-                                                    <button onClick={() => updateComponentStyle(selectedComponent.id, 'textTransform', 'capitalize')} className={selectedComponent.style?.textTransform === 'capitalize' ? styles.active : ''}>Abc</button>
-                                                    <button onClick={() => updateComponentStyle(selectedComponent.id, 'textTransform', 'lowercase')} className={selectedComponent.style?.textTransform === 'lowercase' ? styles.active : ''}>abc</button>
-                                                </div>
-                                            </div>
-                                            <div className={styles['form-group']}>
-                                                <label className={styles['form-label']}>Text Color</label>
-                                                <input type="color" value={selectedComponent.style?.color || '#000000'} onChange={(e) => updateComponentStyle(selectedComponent.id, 'color', e.target.value)} className={styles['form-control']} style={{ height: '40px' }} />
-                                            </div>
-                                            <div className={styles['button-group']} style={{ marginTop: '10px' }}>
-                                                <button onClick={() => updateComponentStyle(selectedComponent.id, 'textAlign', 'left')} className={selectedComponent.style?.textAlign === 'left' ? styles.active : ''}><i className="fas fa-align-left"></i></button>
-                                                <button onClick={() => updateComponentStyle(selectedComponent.id, 'textAlign', 'center')} className={selectedComponent.style?.textAlign === 'center' ? styles.active : ''}><i className="fas fa-align-center"></i></button>
-                                                <button onClick={() => updateComponentStyle(selectedComponent.id, 'textAlign', 'right')} className={selectedComponent.style?.textAlign === 'right' ? styles.active : ''}><i className="fas fa-align-right"></i></button>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className={styles['prop-category']}>
-                                    <div className={`${styles['prop-header']} ${openCategories.size ? styles.open : ''}`} onClick={() => toggleCategory('size')}>
-                                        <span><i className="fas fa-expand-arrows-alt"></i> SIZE & DIMENSIONS</span>
-                                        <i className="fas fa-chevron-down"></i>
-                                    </div>
-                                    {openCategories.size && (
-                                        <div className={styles['prop-content']}>
-                                            <div className={styles.flex} style={{ gap: '10px' }}>
-                                                <div className={styles['form-group']} style={{ flex: 1 }}>
-                                                    <label className={styles['form-label']}>Width</label>
-                                                    <div style={{ display: 'flex', gap: '4px' }}>
-                                                        <input
-                                                            type="text"
-                                                            value={selectedComponent.style?.width || 'auto'}
-                                                            onChange={(e) => updateComponentStyle(selectedComponent.id, 'width', e.target.value)}
-                                                            className={styles['form-control']}
-                                                            style={{ flex: 2 }}
-                                                        />
-                                                    </div>
-                                                </div>
-                                                <div className={styles['form-group']} style={{ flex: 1 }}>
-                                                    <label className={styles['form-label']}>Height</label>
-                                                    <div style={{ display: 'flex', gap: '4px' }}>
-                                                        <input
-                                                            type="text"
-                                                            value={selectedComponent.style?.height || 'auto'}
-                                                            onChange={(e) => updateComponentStyle(selectedComponent.id, 'height', e.target.value)}
-                                                            className={styles['form-control']}
-                                                            style={{ flex: 2 }}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className={styles.flex} style={{ gap: '10px' }}>
-                                                <div className={styles['form-group']} style={{ flex: 1 }}>
-                                                    <label className={styles['form-label']}>Min W</label>
-                                                    <input type="text" placeholder="auto" value={selectedComponent.style?.minWidth || ''} onChange={(e) => updateComponentStyle(selectedComponent.id, 'minWidth', e.target.value)} className={styles['form-control']} />
-                                                </div>
-                                                <div className={styles['form-group']} style={{ flex: 1 }}>
-                                                    <label className={styles['form-label']}>Max W</label>
-                                                    <input type="text" placeholder="none" value={selectedComponent.style?.maxWidth || ''} onChange={(e) => updateComponentStyle(selectedComponent.id, 'maxWidth', e.target.value)} className={styles['form-control']} />
-                                                </div>
-                                            </div>
-                                            <div className={styles['form-group']}>
-                                                <label className={styles['form-label']}>Overflow</label>
-                                                <select value={selectedComponent.style?.overflow || 'visible'} onChange={(e) => updateComponentStyle(selectedComponent.id, 'overflow', e.target.value)} className={styles['form-control']}>
-                                                    <option value="visible">Visible</option>
-                                                    <option value="hidden">Hidden</option>
-                                                    <option value="scroll">Scroll</option>
-                                                    <option value="auto">Auto</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                                <div className={styles['prop-category']}>
-                                    <div className={`${styles['prop-header']} ${openCategories.layout ? styles.open : ''}`} onClick={() => toggleCategory('layout')}>
-                                        <span><i className="fas fa-th-large"></i> LAYOUT & SPACING</span>
-                                        <i className="fas fa-chevron-down"></i>
-                                    </div>
-                                    {openCategories.layout && (
-                                        <div className={styles['prop-content']}>
-                                            <div className={styles['spacing-visualizer']}>
-                                                <div className={styles['spacing-container']}>
-                                                    <span className={styles['spacing-label']} style={{ top: '6px' }}>Margin</span>
-                                                    <input
-                                                        type="number"
-                                                        className={`${styles['spacing-input-mini']} ${styles.margin}`}
-                                                        style={{ top: '4px', left: '50%', transform: 'translateX(-50%)' }}
-                                                        value={parseInt(selectedComponent.style?.marginTop) || 0}
-                                                        onChange={(e) => updateComponentStyle(selectedComponent.id, 'marginTop', `${e.target.value}px`)}
-                                                        title="Margin Top"
-                                                    />
-                                                    <input
-                                                        type="number"
-                                                        className={`${styles['spacing-input-mini']} ${styles.margin}`}
-                                                        style={{ bottom: '4px', left: '50%', transform: 'translateX(-50%)' }}
-                                                        value={parseInt(selectedComponent.style?.marginBottom) || 0}
-                                                        onChange={(e) => updateComponentStyle(selectedComponent.id, 'marginBottom', `${e.target.value}px`)}
-                                                        title="Margin Bottom"
-                                                    />
-                                                    <input
-                                                        type="number"
-                                                        className={`${styles['spacing-input-mini']} ${styles.margin}`}
-                                                        style={{ left: '4px', top: '50%', transform: 'translateY(-50%)' }}
-                                                        value={parseInt(selectedComponent.style?.marginLeft) || 0}
-                                                        onChange={(e) => updateComponentStyle(selectedComponent.id, 'marginLeft', `${e.target.value}px`)}
-                                                        title="Margin Left"
-                                                    />
-                                                    <input
-                                                        type="number"
-                                                        className={`${styles['spacing-input-mini']} ${styles.margin}`}
-                                                        style={{ right: '4px', top: '50%', transform: 'translateY(-50%)' }}
-                                                        value={parseInt(selectedComponent.style?.marginRight) || 0}
-                                                        onChange={(e) => updateComponentStyle(selectedComponent.id, 'marginRight', `${e.target.value}px`)}
-                                                        title="Margin Right"
-                                                    />
-
-                                                    <div className={styles['spacing-inner-box']}>
-                                                        <span className={styles['spacing-label']} style={{ top: '2px', fontSize: '8px' }}>Padding</span>
-                                                        <input
-                                                            type="number"
-                                                            className={`${styles['spacing-input-mini']} ${styles.padding}`}
-                                                            style={{ top: '2px', left: '50%', transform: 'translateX(-50%) scale(0.8)' }}
-                                                            value={parseInt(selectedComponent.style?.paddingTop) || 0}
-                                                            onChange={(e) => updateComponentStyle(selectedComponent.id, 'paddingTop', `${e.target.value}px`)}
-                                                        />
-                                                        <input
-                                                            type="number"
-                                                            className={`${styles['spacing-input-mini']} ${styles.padding}`}
-                                                            style={{ bottom: '2px', left: '50%', transform: 'translateX(-50%) scale(0.8)' }}
-                                                            value={parseInt(selectedComponent.style?.paddingBottom) || 0}
-                                                            onChange={(e) => updateComponentStyle(selectedComponent.id, 'paddingBottom', `${e.target.value}px`)}
-                                                        />
-                                                        <input
-                                                            type="number"
-                                                            className={`${styles['spacing-input-mini']} ${styles.padding}`}
-                                                            style={{ left: '2px', top: '50%', transform: 'translateY(-50%) scale(0.8)' }}
-                                                            value={parseInt(selectedComponent.style?.paddingLeft) || 0}
-                                                            onChange={(e) => updateComponentStyle(selectedComponent.id, 'paddingLeft', `${e.target.value}px`)}
-                                                        />
-                                                        <input
-                                                            type="number"
-                                                            className={`${styles['spacing-input-mini']} ${styles.padding}`}
-                                                            style={{ right: '2px', top: '50%', transform: 'translateY(-50%) scale(0.8)' }}
-                                                            value={parseInt(selectedComponent.style?.paddingRight) || 0}
-                                                            onChange={(e) => updateComponentStyle(selectedComponent.id, 'paddingRight', `${e.target.value}px`)}
-                                                        />
-                                                        <div className={styles['spacing-center-icon']}>
-                                                            <i className="fas fa-expand"></i>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className={styles['form-group']}>
-                                                <label className={styles['form-label']}>Position Mode</label>
-                                                <div className={styles['button-group']}>
-                                                    <button 
-                                                        onClick={() => updateComponentStyle(selectedComponent.id, 'position', 'absolute')} 
-                                                        className={selectedComponent.style?.position === 'absolute' ? styles.active : ''}
-                                                    >
-                                                        Absolute
-                                                    </button>
-                                                    <button 
-                                                        onClick={() => updateComponentStyle(selectedComponent.id, 'position', 'relative')} 
-                                                        className={selectedComponent.style?.position === 'relative' ? styles.active : ''}
-                                                    >
-                                                        Relative
-                                                    </button>
-                                                </div>
-                                                <p style={{ fontSize: '0.7rem', color: '#94a3b8', marginTop: '5px' }}>
-                                                    {selectedComponent.style?.position === 'absolute' 
-                                                        ? 'Free dragging enabled (Wix Style)' 
-                                                        : 'Auto-stacking enabled (Webflow Style)'}
-                                                </p>
-                                                
-                                                {selectedComponent.style?.position === 'absolute' && (
-                                                    <div className={styles.flex} style={{ gap: '10px', marginTop: '12px' }}>
-                                                        <div className={styles['form-group']} style={{ flex: 1, marginBottom: 0 }}>
-                                                            <label className={styles['form-label']} style={{ fontSize: '10px' }}>X (Left)</label>
-                                                            <input 
-                                                                type="number" 
-                                                                value={parseInt(selectedComponent.style?.left) || 0} 
-                                                                onChange={(e) => updateComponentStyle(selectedComponent.id, 'left', `${e.target.value}px`)} 
-                                                                className={styles['form-control']} 
-                                                            />
-                                                        </div>
-                                                        <div className={styles['form-group']} style={{ flex: 1, marginBottom: 0 }}>
-                                                            <label className={styles['form-label']} style={{ fontSize: '10px' }}>Y (Top)</label>
-                                                            <input 
-                                                                type="number" 
-                                                                value={parseInt(selectedComponent.style?.top) || 0} 
-                                                                onChange={(e) => updateComponentStyle(selectedComponent.id, 'top', `${e.target.value}px`)} 
-                                                                className={styles['form-control']} 
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            <label className={styles['form-label']}>Quick Align</label>
-                                            <div className={`${styles.flex} ${styles['justify-between']} ${styles['mb-5']}`} style={{ gap: '4px' }}>
-                                                <button onClick={() => alignComponent('left')} className={`${styles.btn} ${styles['btn-secondary']} ${styles['btn-sm']}`} style={{ flex: 1 }} title="Left"><i className="fas fa-arrow-left"></i></button>
-                                                <button onClick={() => alignComponent('center')} className={`${styles.btn} ${styles['btn-secondary']} ${styles['btn-sm']}`} style={{ flex: 1 }} title="Center"><i className="fas fa-arrows-alt-h"></i></button>
-                                                <button onClick={() => alignComponent('right')} className={`${styles.btn} ${styles['btn-secondary']} ${styles['btn-sm']}`} style={{ flex: 1 }} title="Right"><i className="fas fa-arrow-right"></i></button>
-                                            </div>
-                                            <div className={`${styles.flex} ${styles['justify-between']}`} style={{ gap: '4px' }}>
-                                                <button onClick={() => alignComponent('top')} className={`${styles.btn} ${styles['btn-secondary']} ${styles['btn-sm']}`} style={{ flex: 1 }} title="Top"><i className="fas fa-arrow-up"></i></button>
-                                                <button onClick={() => alignComponent('middle')} className={`${styles.btn} ${styles['btn-secondary']} ${styles['btn-sm']}`} style={{ flex: 1 }} title="Middle"><i className="fas fa-arrows-alt-v"></i></button>
-                                                <button onClick={() => alignComponent('bottom')} className={`${styles.btn} ${styles['btn-secondary']} ${styles['btn-sm']}`} style={{ flex: 1 }} title="Bottom"><i className="fas fa-arrow-down"></i></button>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                                <div className={styles['prop-category']}>
-                                    <div className={`${styles['prop-header']} ${openCategories.flexbox ? styles.open : ''}`} onClick={() => toggleCategory('flexbox')}>
-                                        <span><i className="fas fa-layer-group"></i> FLEXBOX</span>
-                                        <i className="fas fa-chevron-down"></i>
-                                    </div>
-                                    {openCategories.flexbox && (
-                                        <div className={styles['prop-content']}>
-                                            <div className={styles['form-group']}>
-                                                <label className={styles['form-label']}>Display</label>
-                                                <select value={selectedComponent.style?.display || 'block'} onChange={(e) => updateComponentStyle(selectedComponent.id, 'display', e.target.value)} className={styles['form-control']}>
-                                                    <option value="block">Block</option>
-                                                    <option value="flex">Flex</option>
-                                                    <option value="inline-block">Inline Block</option>
-                                                </select>
-                                            </div>
-                                            {selectedComponent.style?.display === 'flex' && (
-                                                <>
-                                                    <div className={styles['form-group']}>
-                                                        <label className={styles['form-label']}>Direction</label>
-                                                        <select value={selectedComponent.style?.flexDirection || 'row'} onChange={(e) => updateComponentStyle(selectedComponent.id, 'flexDirection', e.target.value)} className={styles['form-control']}>
-                                                            <option value="row">Row</option>
-                                                            <option value="column">Column</option>
-                                                        </select>
-                                                    </div>
-                                                    <div className={styles['form-group']}>
-                                                        <label className={styles['form-label']}>Align Items</label>
-                                                        <select value={selectedComponent.style?.alignItems || 'stretch'} onChange={(e) => updateComponentStyle(selectedComponent.id, 'alignItems', e.target.value)} className={styles['form-control']}>
-                                                            <option value="flex-start">Start</option>
-                                                            <option value="center">Center</option>
-                                                            <option value="flex-end">End</option>
-                                                            <option value="stretch">Stretch</option>
-                                                        </select>
-                                                    </div>
-                                                    <div className={styles['form-group']}>
-                                                        <label className={styles['form-label']}>Justify Content</label>
-                                                        <select value={selectedComponent.style?.justifyContent || 'flex-start'} onChange={(e) => updateComponentStyle(selectedComponent.id, 'justifyContent', e.target.value)} className={styles['form-control']}>
-                                                            <option value="flex-start">Start</option>
-                                                            <option value="center">Center</option>
-                                                            <option value="flex-end">End</option>
-                                                            <option value="space-between">Between</option>
-                                                            <option value="space-around">Around</option>
-                                                        </select>
-                                                    </div>
-                                                    <div className={styles['form-group']}>
-                                                        <label className={styles['form-label']}>Gap (px)</label>
-                                                        <input type="number" value={parseInt(selectedComponent.style?.gap) || 0} onChange={(e) => updateComponentStyle(selectedComponent.id, 'gap', `${e.target.value}px`)} className={styles['form-control']} />
-                                                    </div>
-                                                </>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className={styles['prop-category']}>
-                                    <div className={`${styles['prop-header']} ${openCategories.borders ? styles.open : ''}`} onClick={() => toggleCategory('borders')}>
-                                        <span><i className="fas fa-border-all"></i> BORDERS</span>
-                                        <i className="fas fa-chevron-down"></i>
-                                    </div>
-                                    {openCategories.borders && (
-                                        <div className={styles['prop-content']}>
-                                            <div className={styles['form-group']}>
-                                                <label className={styles['form-label']}>Radius</label>
-                                                <input type="number" value={parseInt(selectedComponent.style?.borderRadius) || 0} onChange={(e) => updateComponentStyle(selectedComponent.id, 'borderRadius', `${e.target.value}px`)} className={styles['form-control']} />
-                                            </div>
-                                            <div className={styles.flex} style={{ gap: '10px' }}>
-                                                <div className={styles['form-group']} style={{ flex: 1 }}>
-                                                    <label className={styles['form-label']}>Width</label>
-                                                    <input type="number" value={parseInt(selectedComponent.style?.borderWidth) || 0} onChange={(e) => updateComponentStyle(selectedComponent.id, 'borderWidth', `${e.target.value}px`)} className={styles['form-control']} />
-                                                </div>
-                                                <div className={styles['form-group']} style={{ flex: 1 }}>
-                                                    <label className={styles['form-label']}>Style</label>
-                                                    <select value={selectedComponent.style?.borderStyle || 'solid'} onChange={(e) => updateComponentStyle(selectedComponent.id, 'borderStyle', e.target.value)} className={styles['form-control']}>
-                                                        <option value="solid">Solid</option>
-                                                        <option value="dashed">Dashed</option>
-                                                        <option value="dotted">Dotted</option>
-                                                        <option value="none">None</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div className={styles['form-group']}>
-                                                <label className={styles['form-label']}>Border Color</label>
-                                                <input type="color" value={selectedComponent.style?.borderColor || '#000000'} onChange={(e) => updateComponentStyle(selectedComponent.id, 'borderColor', e.target.value)} className={styles['form-control']} style={{ height: '40px' }} />
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className={styles['prop-category']}>
-                                    <div className={`${styles['prop-header']} ${openCategories.effects ? styles.open : ''}`} onClick={() => toggleCategory('effects')}>
-                                        <span><i className="fas fa-wand-magic-sparkles"></i> EFFECTS</span>
-                                        <i className="fas fa-chevron-down"></i>
-                                    </div>
-                                    {openCategories.effects && (
-                                        <div className={styles['prop-content']}>
-                                            <div className={styles['form-group']}>
-                                                <label className={styles['form-label']}>Box Shadow</label>
-                                                <select
-                                                    value={selectedComponent.style?.boxShadow || 'none'}
-                                                    onChange={(e) => updateComponentStyle(selectedComponent.id, 'boxShadow', e.target.value)}
-                                                    className={styles['form-control']}
-                                                >
-                                                    <option value="none">None</option>
-                                                    <option value="0px 2px 5px rgba(0,0,0,0.1)">Soft</option>
-                                                    <option value="0px 4px 10px rgba(0,0,0,0.15)">Medium</option>
-                                                    <option value="0px 10px 20px rgba(0,0,0,0.2)">Strong</option>
-                                                    <option value="0px 20px 40px rgba(0,0,0,0.3)">Extra Strong</option>
-                                                    <option value="inset 0px 4px 10px rgba(0,0,0,0.1)">Inset Shadow</option>
-                                                </select>
-                                            </div>
-                                            <div className={styles['form-group']}>
-                                                <label className={styles['form-label']}>Opacity ({Math.round((selectedComponent.style?.opacity || 1) * 100)}%)</label>
-                                                <input type="range" min="0" max="1" step="0.1" value={selectedComponent.style?.opacity !== undefined ? selectedComponent.style.opacity : 1} onChange={(e) => updateComponentStyle(selectedComponent.id, 'opacity', parseFloat(e.target.value))} className={styles['w-100']} />
-                                            </div>
-                                            <div className={styles['form-group']}>
-                                                <label className={styles['form-label']}>Z-Index</label>
-                                                <input type="number" value={selectedComponent.style?.zIndex || 0} onChange={(e) => updateComponentStyle(selectedComponent.id, 'zIndex', parseInt(e.target.value))} className={styles['form-control']} />
-                                            </div>
-                                            <div className={styles['form-group']}>
-                                                <label className={styles['form-label']}>Filter (Blur)</label>
-                                                <input type="range" min="0" max="20" step="1" value={parseInt(selectedComponent.style?.filter?.replace('blur(', '').replace('px)', '')) || 0} onChange={(e) => updateComponentStyle(selectedComponent.id, 'filter', `blur(${e.target.value}px)`)} className={styles['w-100']} />
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-
-                                <button
-                                    onClick={() => deleteComponent(selectedId)}
-                                    className={`${styles.btn} ${styles['btn-danger']} ${styles['w-100']} ${styles['mt-20']}`}
-                                >
-                                    <i className="fas fa-trash"></i> Delete Component
-                                </button>
-                            </div>
-                        ) : (
-                            <div className={styles['mt-20']}>
-                                <h4>Page Settings</h4>
-                                <label className={`${styles['d-block']} ${styles['mb-5']} ${styles['fw-bold']}`}>Background Image</label>
-                                <div className={styles['mb-10']}>
-                                    <input type="file" accept="image/*" onChange={handlePageBackgroundUpload} className={styles['w-100']} />
-                                </div>
-                                <label className={`${styles['d-block']} ${styles['mb-5']} ${styles['fw-bold']}`}>Or Image URL</label>
-                                <input
-                                    type="text"
-                                    value={backgroundImage}
-                                    onChange={(e) => setBackgroundImage(e.target.value)}
-                                    placeholder="https://"
-                                    className={styles['form-control']}
-                                />
-                                {backgroundImage && (
-                                    <>
-                                        <button onClick={() => setBackgroundImage('')} className={`${styles.btn} ${styles['btn-danger']} ${styles['w-100']} ${styles['mt-10']} ${styles['mb-15']}`}>Remove Background</button>
-
-                                        <label className={`${styles['d-block']} ${styles['mb-5']} ${styles['fw-bold']}`}>Background Gradient</label>
-                                        <select
-                                            value={activePage.style.background || 'none'}
-                                            onChange={(e) => updatePageStyle('background', e.target.value)}
-                                            className={`${styles['form-control']} ${styles['mb-15']}`}
-                                        >
-                                            <option value="none">None</option>
-                                            <option value="linear-gradient(135deg, #667eea 0%, #764ba2 100%)">Royal Purple</option>
-                                            <option value="linear-gradient(135deg, #f093fb 0%, #f5576c 100%)">Soft Pink</option>
-                                            <option value="linear-gradient(135deg, #2af598 0%, #009efd 100%)">Ocean Blue</option>
-                                            <option value="linear-gradient(135deg, #0a0a0a 0%, #2e2e2e 100%)">Dark Studio</option>
-                                            <option value="linear-gradient(135deg, #d4af37 0%, #aa8b2c 100%)">Gold Luxury</option>
-                                        </select>
-
-                                        <label className={`${styles['d-block']} ${styles['mb-5']} ${styles['fw-bold']}`}>Background Size</label>
-                                        <select
-                                            value={backgroundSize}
-                                            onChange={(e) => setBackgroundSize(e.target.value)}
-                                            className={`${styles['form-control']} ${styles['mb-10']}`}
-                                        >
-                                            <option value="cover">Cover (Fill)</option>
-                                            <option value="contain">Contain (Fit)</option>
-                                            <option value="auto">Auto (Original Size)</option>
-                                            <option value="100% 100%">Stretch (100% 100%)</option>
-                                        </select>
-
-                                        <label className={`${styles['d-block']} ${styles['mb-5']} ${styles['fw-bold']}`}>Background Position</label>
-                                        <select
-                                            value={backgroundPosition}
-                                            onChange={(e) => setBackgroundPosition(e.target.value)}
-                                            className={`${styles['form-control']} ${styles['mb-10']}`}
-                                        >
-                                            <option value="center">Center</option>
-                                            <option value="top">Top</option>
-                                            <option value="bottom">Bottom</option>
-                                            <option value="left">Left</option>
-                                            <option value="right">Right</option>
-                                            <option value="top left">Top Left</option>
-                                            <option value="top right">Top Right</option>
-                                            <option value="bottom left">Bottom Left</option>
-                                            <option value="bottom right">Bottom Right</option>
-                                        </select>
-
-                                        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Background Repeat</label>
-                                        <select
-                                            value={backgroundRepeat}
-                                            onChange={(e) => setBackgroundRepeat(e.target.value)}
-                                            style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', marginBottom: '10px' }}
-                                        >
-                                            <option value="no-repeat">No Repeat</option>
-                                            <option value="repeat">Repeat</option>
-                                            <option value="repeat-x">Repeat X (Horizontal)</option>
-                                            <option value="repeat-y">Repeat Y (Vertical)</option>
-                                        </select>
-                                    </>
-                                )}
-                            </div>
-                        )}
-                    </div>
-                )}
             </div>
-
 
             {/* Modals */}
             {showSaveModal && (

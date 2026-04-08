@@ -2,6 +2,14 @@ import React from 'react';
 import styles from '../Editor.module.css';
 import FONT_FAMILIES from '../../../constants/fontFamilies';
 
+/**
+ * PropertiesPanel.js
+ * 
+ * Renders the right-hand Inspector tab. 
+ * This acts as a central UI bound to the currently selected component.
+ * It maps form inputs (fonts, colors, sizes, flexbox) back to the parent `Editor.js` state.
+ * If no component is selected, it falls back to rendering global Page-level settings (Backgrounds).
+ */
 const PropertiesPanel = ({
     // component
     selectedComponent,
@@ -50,6 +58,11 @@ const PropertiesPanel = ({
                     )}
 
                     {/* ── State Selector ───────────────────────────────────── */}
+                    {/* 
+                      * This toggle intercepts property updates. If 'hover' or 'active' is active,
+                      * any subsequent style changes (e.g., color) will be strictly mapped to the 
+                      * CSS pseudo-class object in the component's data model, rather than its base style.
+                      */}
                     <div className={styles['form-group']} style={{ marginBottom: '24px' }}>
                         <label className={styles['form-label']}>EDITING STATE</label>
                         <div className={styles['view-mode-toggle']}>

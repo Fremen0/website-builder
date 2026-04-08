@@ -28,6 +28,10 @@ const CanvasItem = ({ id, type, content, link, onSelect, style, responsiveStyles
 
     // ─────────────────────────────────────────────────────────
     // Wix-style custom mouse drag — zero-latency direct DOM updates
+    // This function bypasses React's state tree during the active mouse movement cycle.
+    // By mutating the DOM's `style.left` and `style.top` directly rather than triggering re-renders,
+    // it achieves extremely smooth, lag-free 60fps drag performance.
+    // The final coordinates are securely committed to React's state tree only upon `mouseup`.
     // ─────────────────────────────────────────────────────────
     const handleMouseDown = useCallback((e) => {
         if (previewMode || isEditingText || isResizing) return;
@@ -140,7 +144,10 @@ const CanvasItem = ({ id, type, content, link, onSelect, style, responsiveStyles
     }, [previewMode, isEditingText, isResizing, style, id, onSelect, onDragStart, onMove]);
 
     // ─────────────────────────────────────────────────────────
-    // Resize handler (unchanged)
+    // Resize handler
+    // Governs the drag actions on component boundary edges (w-resize, e-resize, etc.).
+    // Responsively adjusts width, height, and offsets while enforcing safety bounds 
+    // (e.g., preventing negative sizes or breaching the canvas boundary).
     // ─────────────────────────────────────────────────────────
     const handleResizeMouseDown = (e, direction) => {
         e.stopPropagation();
@@ -209,6 +216,8 @@ const CanvasItem = ({ id, type, content, link, onSelect, style, responsiveStyles
 
     // ─────────────────────────────────────────────────────────
     // Render content
+    // Resolves the internal abstract JSON model (`type: 'video'`) into concrete, styled React DOM elements.
+    // When not in preview mode, textual elements inject a `contentEditable` interface for live inline typing.
     // ─────────────────────────────────────────────────────────
     const renderContent = () => {
         if (type === 'image') {

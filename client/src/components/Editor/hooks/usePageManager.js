@@ -31,6 +31,8 @@ const usePageManager = () => {
     const activePage = pages.find(p => p.id === activePageId) || pages[0];
 
     // ── Setters that target the active page ─────────────────────────────────
+    // Overwrites the standard `setComponents` behavior to intercept the state updates.
+    // Instead of setting a global components array, it ensures the changes are ONLY applied to the currently active page.
     const setComponents = useCallback((newComponentsOrUpdater) => {
         setPages(prev => prev.map(page => {
             if (page.id !== activePageId) return page;
@@ -51,6 +53,8 @@ const usePageManager = () => {
     }, [activePageId]);
 
     // ── CRUD ────────────────────────────────────────────────────────────────
+    // Adds a new blank page to the project. It automatically formats the name into a URL-friendly slug (ID).
+    // Verifies uniqueness against existing page identifiers to prevent routing collisions.
     const addPage = useCallback(() => {
         const name = newPageName.trim();
         if (!name) return;

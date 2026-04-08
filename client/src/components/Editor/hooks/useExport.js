@@ -19,6 +19,10 @@ const useExport = ({ pages, activePageId, components, tempTemplateName, setShowS
             .join('; ');
     };
 
+    // Compiles the Active Page's JSON structure into a downloadable static HTML string.
+    // It transpiles internal React concepts (inline styles, pseudo-classes, media queries) 
+    // into standard HTML5 formatting. CSS blocks are accumulated and dynamically injected 
+    // into the `<head>` tag to render breakpoints accurately in the raw output.
     const handleExportHTML = useCallback(() => {
         const page = pages.find(p => p.id === activePageId);
         if (!page) return;
