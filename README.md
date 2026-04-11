@@ -2,6 +2,15 @@
 
 A professional, high-performance drag-and-drop website builder designed for speed, precision, and ease of use. Build stunning, responsive websites in minutes with a clean, modern interface inspired by top-tier tools like Webflow and Wix.
 
+```mermaid
+flowchart LR
+    A[Start Project] --> B{Select Template}
+    B --> C[Custom Design]
+    C --> D[Live Preview]
+    D --> E[Auto-Save]
+    E --> F[Export HTML/CSS]
+```
+
 ## ✨ Key Features
 
 - **Hybrid Layout Engine**: Supports both Freeform (Absolute Positioning like Wix/Figma) for maximum creative freedom and CSS Flow (Relative/Flexbox like Webflow) for structured components.

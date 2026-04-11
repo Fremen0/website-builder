@@ -5,7 +5,9 @@ The methodology adopted for this project revolves around modern web development 
 The primary design philosophy of the website builder is to offer a "Hybrid Capabilities" model. Traditional builders generally fall into two categories: strict grid/flow-based (like Webflow) and absolutely free-drag (like Wix). In this system, both approaches are synthesized. Why was this done? To provide advanced users with the structured capabilities of CSS Flexbox and Grid for responsive sections while still retaining the freedom to drag and drop overlapping elements absolutely using X and Y coordinates.
 
 ## 3.2 General Structure
-The system's architecture follows a classic Client-Server (Frontend-Backend) model:
+The system's architecture follows a classic Client-Server (Frontend-Backend) model, as illustrated in the following high-level system architecture diagram:
+
+![Figure 3.1: System Architecture Overview](./images/system_architecture_en.png)
 
 - **Frontend (Client)**: Built exclusively as a Single Page Application (SPA). The state of the entire project is held in memory using React Hooks. Global context providers wrap the application to manage session states and drag-and-drop contexts:
   ```javascript
@@ -42,6 +44,32 @@ const generateToken = (userId) => {
         expiresIn: '30d' // Token remains valid for 30 days
     });
 };
+```
+
+The sequence of operations for authentication is visualized below, showing the interaction between the client, server, and database for secure session management:
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant C as Client (React)
+    participant S as Server (Express)
+    participant DB as MongoDB
+
+    U->>C: Enter Credentials
+    C->>S: POST /api/auth/login
+    S->>DB: Find User & Verify Password
+    DB-->>S: User Found
+    S->>S: Generate JWT Token
+    S-->>C: Return Token + User Info
+    C->>C: Store Token in LocalStorage
+    
+    Note over C,S: Subsequent Protected Requests
+    
+    C->>S: GET /api/projects (Header: Bearer Token)
+    S->>S: Verify JWT Signature
+    S->>DB: Fetch User Projects
+    DB-->>S: Data Found
+    S-->>C: Return JSON Data
 ```
 
 Communication between the two layers occurs asynchronously via Axios, with an automated debounced saving mechanism introduced on the frontend to prevent data loss without overwhelming the server with continuous requests on every pixel movement.
@@ -131,6 +159,10 @@ The core workspace (`Editor.js`) is the most computationally heavy page in the s
 
 - **Design Justification**: To improve User Experience (UX), a floating toolbar was implemented over selected elements, allowing quick actions like duplication or deletion without having to travel across the screen to the sidebar. Furthermore, an Undo/Redo stack (`history` and `future` states) was explicitly built to track changes to the canvas state, forgiving user mistakes instantly.
 
+The core operational logic of the Editor, from user interaction to state synchronization, is summarized in the following flowchart:
+
+![Figure 3.2: Editor Operational Logic and Interaction Flow](./images/editor_logic_en.png)
+
 - **Implementation Logic (Editor Engine)**:
 The Editor's performance and alignment accuracy are maintained via several low-level algorithmic implementations:
 
@@ -178,6 +210,10 @@ useEffect(() => {
     return () => clearTimeout(debounceTimer);
 }, [pages]);
 ```
+
+The persistence state machine ensures synchronization without performance degradation:
+
+![Figure 3.3: Project State Persistence and Auto-save Workflow](./images/save_workflow_en.png)
 
 ### 3.3.3 Preview Page (Mode)
 Rather than redirecting the user to a completely separate URL to view their site, a `previewMode` state toggle is built directly into the Editor. 

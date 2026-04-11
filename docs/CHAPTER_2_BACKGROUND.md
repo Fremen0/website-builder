@@ -1,7 +1,33 @@
-# Chapter Two: Background for Project
+# Chapter Two: THEORETICAL BACKGROUND
 
 ## 2.1 Introduction
 The development of modern web applications has shifted significantly from static HTML pages to dynamic, interactive, and component-based single-page applications (SPAs). Building a complex platform like a Template-Based Website Builder requires a robust architecture capable of handling intensive operations such as real-time Document Object Model (DOM) manipulation, state management, and seamless client-server communication. This chapter provides a general overview of the foundational concepts, programming languages, tools, and database systems utilized to construct this project. It highlights the rationale behind selecting specific technologies over others to achieve high performance and full creative freedom for the end-user.
+
+The following diagram illustrates the MERN stack data flow and how each technology integrates into the final architecture:
+
+```mermaid
+graph LR
+    subgraph Client_Side [Frontend]
+        React[React.js Library]
+        DOM[Virtual DOM]
+        React --> DOM
+    end
+
+    subgraph Server_Side [Backend]
+        Node[Node.js Runtime]
+        Express[Express.js Framework]
+        Node --> Express
+    end
+
+    subgraph Data_Layer [Storage]
+        DB[(MongoDB)]
+        Mongoose[Mongoose ODM]
+        Mongoose --> DB
+    end
+
+    React <-->|REST API / JSON| Express
+    Express <--> Mongoose
+```
 
 ## 2.2 Languages
 The project fundamentally relies on the core languages of the web to ensure cross-browser compatibility and high performance.
