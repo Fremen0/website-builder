@@ -62,14 +62,21 @@ flowchart LR
    echo "PORT=5000" >> server/.env
    ```
 
-4. **Running the Application**:
+3. **Running the Application**:
    ```bash
-   # Run Backend (from /server directory)
+   # 1. Start the local database (from /server directory)
+   cd server
+   npm run db:start
+
+   # 2. Run Backend (from /server directory in a new terminal)
    npm run dev
    
-   # Run Frontend (from /client directory)
+   # 3. Run Frontend (from /client directory in a new terminal)
+   cd ../client
    npm start
    ```
+   
+   *(Note: To gracefully stop the database later, run `npm run db:stop` from the `/server` directory)*
 
 ## 📸 Screenshots
 
