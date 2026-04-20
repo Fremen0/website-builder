@@ -45,8 +45,9 @@ const AuthPage = ({ onSuccess }) => {
                 setIsLoading(false);
                 return;
             }
-            if (formData.password.length < 6) {
-                setLocalError('Password must be at least 6 characters');
+            const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+            if (!passwordRegex.test(formData.password)) {
+                setLocalError('Password must be at least 8 characters and include uppercase, lowercase, number, and special character');
                 setIsLoading(false);
                 return;
             }
@@ -194,7 +195,7 @@ const AuthPage = ({ onSuccess }) => {
                                 id="auth-password"
                                 type={showPassword ? 'text' : 'password'}
                                 name="password"
-                                placeholder={mode === 'login' ? '••••••••' : 'At least 6 characters'}
+                                placeholder={mode === 'login' ? '••••••••' : 'At least 8 chars + symbols/nums'}
                                 value={formData.password}
                                 onChange={handleChange}
                                 autoComplete={mode === 'login' ? 'current-password' : 'new-password'}

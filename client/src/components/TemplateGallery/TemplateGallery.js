@@ -23,7 +23,7 @@ const generatePreviewHTML = (template) => {
     return `<!DOCTYPE html><html><head>
 <meta charset="UTF-8">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<style>* { box-sizing: border-box; margin: 0; } body { font-family: 'Inter', sans-serif; overflow: hidden; }</style>
+<style>* { box-sizing: border-box; margin: 0; } body { font-family: 'Inter', sans-serif; }</style>
 </head><body style="position:relative;width:1200px;min-height:800px;">${body}</body></html>`;
 };
 

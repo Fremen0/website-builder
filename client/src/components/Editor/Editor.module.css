@@ -297,6 +297,33 @@
     min-height: 667px;
 }
 
+/* Scaling for Preview Mode to see the full layout */
+.page-content.preview-mode.tablet {
+    width: 1200px;
+    max-width: 1200px;
+    transform: scale(0.64);
+    transform-origin: top center;
+}
+
+.page-content.preview-mode.mobile {
+    width: 1200px;
+    max-width: 1200px;
+    transform: scale(0.3125);
+    transform-origin: top center;
+}
+
+/* Use zoom if supported to fix layout reflow issues with transform */
+@supports (zoom: 1) {
+    .page-content.preview-mode.tablet {
+        transform: none;
+        zoom: 0.64;
+    }
+    .page-content.preview-mode.mobile {
+        transform: none;
+        zoom: 0.3125;
+    }
+}
+
 /* Floating Toolbar */
 .floating-toolbar {
     position: absolute;
